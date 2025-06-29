@@ -1,0 +1,186 @@
+/* app/queue/informations/admin/AdminPage.module.css */
+
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  src: url('/fonts/orbitron/Orbitron-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+.fontSarabun {
+  font-family: 'Sarabun', sans-serif;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 26rem;
+  width: 100%;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  color: #3b82f6;
+}
+
+.input {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.updateButton {
+  background-color: #3b82f6;
+}
+
+.updateButton:hover {
+  background-color: #2563eb;
+}
+
+.resetButton {
+  background-color: #ef4444;
+}
+
+.resetButton:hover {
+  background-color: #dc2626;
+}
+
+.logoutWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.logoutButton {
+  font-family: 'Sarabun', sans-serif;
+  background-color: #6b7280; /* สีเทาเข้ม */
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+  min-width: 200px; /* ปรับขนาดตามต้องการ */
+}
+
+.logoutButton:hover {
+  background-color: #4b5563;
+}
+
+.popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #10b981;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+}
+
+.popupWrapper {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popupContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  font-weight: bold;
+  font-size: 1rem;
+  animation: popup-glow 1.5s ease-in-out infinite alternate;
+}
+
+.popupIcon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: #ffffff;
+}
+
+.popupText {
+  white-space: nowrap;
+}
+
+@keyframes popup-glow {
+  from {
+    box-shadow: 0 0 10px #34d399;
+  }
+  to {
+    box-shadow: 0 0 20px #10b981;
+  }
+}
+
+

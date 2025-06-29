@@ -1,0 +1,78 @@
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  src: url('/fonts/orbitron/Orbitron-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+
+:root {
+  --font-sarabun: 'Sarabun', 'Prompt', sans-serif;
+}
+
+:global(body) {
+  font-family: var(--font-sarabun);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sarabun);
+  line-height: 1.6;
+  background-color: #f0f4f8;
+  color: #333;
+}
+
+/* พิมพ์เฉพาะ #print-area */
+@media print {
+  @page {
+    size: auto;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+    font-family: 'Arial', sans-serif;
+  }
+
+  html, body {
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+}

@@ -1,0 +1,227 @@
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+@page {
+  size: 8cm 29.7cm;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Sarabun', sans-serif;
+  color: #111827;
+  background: #fff;
+}
+
+.printArea {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 0.4cm 0.35cm 0.4cm;
+  box-sizing: border-box;
+}
+
+/* Header */
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.logoLeft {
+  width: 1.5cm;
+  flex-shrink: 0;
+  text-align: center;
+}
+.logo {
+  width: 100%;
+  height: auto;
+}
+
+.logoCaption {
+  font-size: 0.75rem;
+  margin-top: 2mm;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Text ข้างโลโก้ */
+.headerText {
+  flex: 1;
+  line-height: 1.2;
+  margin-top: 2mm; /* ทำให้ข้อความอยู่ต่ำกว่าโลโก้เล็กน้อย */
+}
+.topTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.titleLine {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.05rem;
+}
+.subtitleLine {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+.metaRow {
+  font-size: 0.7rem;
+  margin: 0.1rem 0 0.35rem;
+  padding-top: 0.2rem;
+}
+
+.queuetoplabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+  text-align: left;
+  margin-left: 1.2cm; 
+  padding-left: 0;     
+}
+
+.queueLabel {
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-bottom: 0.1rem;
+  text-align: left;
+  padding-left: 1.8rem;
+}
+
+/* Queue Number */
+.queueBlock {
+  text-align: center;
+  margin: 0.35rem auto;
+}
+.queueNumber {
+  width: 5cm;
+  height: 2.8cm;
+  font-size: 4.3rem;
+  font-weight: 700;
+  border: 1px dashed #9ca3af;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  font-family: 'Sarabun', sans-serif;
+}
+
+/* Patient Info */
+.infoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  margin: 0.1rem 0;
+  line-height: 1.3;
+}
+.infoRow div {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Instructions */
+.instructions {
+  background: #f8fafc;
+  padding: 0.45rem 0.55rem;
+  border-left: 2px solid #2563eb;
+  border-radius: 0.4rem;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  line-height: 1.3;
+}
+.instructions p {
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+.instructions ol {
+  padding-left: 1rem;
+  margin: 0;
+}
+.instructions li {
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+.instructions strong {
+  color: #111827;
+  font-weight: 700;
+}
+
+/* Section Title */
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0.8rem 0 0.3rem;
+}
+.smallNote {
+  font-size: 0.65rem;
+  font-weight: 400;
+}
+
+/* Checklist Grid */
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  font-size: 0.65rem;
+  gap: 0.15rem 0.5rem;    
+  margin-bottom: 0.3rem;   
+  margin-top: 0.2rem;     
+}
+
+.checkGrid input[type='checkbox'] {
+  transform: scale(0.8);
+  margin-right: 0.25rem;
+}
+
+.checkGrid div {
+  display: flex;
+  align-items: baseline; /* ✅ ให้ checkbox กับ text อยู่แนวเดียวกันจริง ๆ */
+  line-height: 1.4;       /* ปรับความสูงแถว */
+}
+
+.checkGrid input[type='checkbox'] {
+  transform: scale(0.8);
+  margin-right: 0.25rem;
+  position: relative;
+  top: 3px; /* ✅ ปรับตรงนี้ให้ต่ำเท่าที่ชอบ */
+}
+
+/* Other Line (ทั่วไป) */
+.otherLine {
+  content: ' .................................';
+  font-size: 0.65rem;
+  margin-top: 0.2rem;
+  padding-top: 0.2rem;
+}
+
+/* Signature Line */
+.signGroup {
+  font-size: 0.65rem;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem; /* ✅ เว้นระยะจากบรรทัดบน */
+  align-items: center;
+}
+
+.signGroup .label {
+  white-space: nowrap;
+}
+
+.signGroup .dots {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

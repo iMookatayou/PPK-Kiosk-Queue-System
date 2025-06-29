@@ -1,0 +1,121 @@
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Sarabun';
+  src: url('/fonts/sarabun/Sarabun-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+.login-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(to bottom right, #f4f4f4, #e0e0e0);
+  font-family: 'Sarabun', sans-serif;
+}
+
+.login-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 360px;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.input-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.password-input {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.3s;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.password-input:focus {
+  border-color: #007bff;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.875rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.login-button:hover {
+  background-color: #0056b3;
+}
+
+.waitingMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+  color: #888;
+}
+
+.spinIcon {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pulseSpin {
+  animation: pulseSpin 1s infinite linear;
+}
+
+@keyframes pulseSpin {
+  0% { transform: rotate(0deg); opacity: 1; }
+  50% { transform: rotate(180deg); opacity: 0.6; }
+  100% { transform: rotate(360deg); opacity: 1; }
+}

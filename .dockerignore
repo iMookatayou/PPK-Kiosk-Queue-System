@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+dist
+
+# Metadata & config
+.git
+.gitignore
+Dockerfile
+docker-compose*
+.env
+.env.*กแนกนแาdockdock

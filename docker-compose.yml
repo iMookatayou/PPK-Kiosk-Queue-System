@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: superapp-web
+    ports:
+      - "3000:3000"
+    environment:
+      - TZ=Asia/Bangkok
+    volumes:
+      - ./data:/app/data  # แชร์ข้อมูลคิวออกมานอก container
