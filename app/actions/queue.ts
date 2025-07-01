@@ -17,7 +17,7 @@ function getToday(): string {
 
 async function getNowFromApi(): Promise<string> {
   try {
-    const res = await fetch('http://superapp-web-1:3000/api/time')
+    const res = await fetch('http://superapp-web-1:4000/api/time')
     const data = await res.json() as {
       iso: string
       formatted: string

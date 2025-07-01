@@ -4,7 +4,7 @@ const ThermalPrinter = require('node-thermal-printer').printer;
 const PrinterTypes = require('node-thermal-printer').types;
 
 const app = express();
-const port = 3001;
+const port = 4000;
 
 app.use(cors());
 app.use(express.json());

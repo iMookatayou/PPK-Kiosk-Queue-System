@@ -116,7 +116,9 @@ export default function QueuePage() {
       if (isReadingCard) return
       setIsReadingCard(true)
 
+      
       const script = document.createElement('script')
+      // script.src = 'https://172.16.46.22:8182/thaiid/read.jsonp?callback=callback&section1=true&section2a=true&section2c=true'
       script.src = 'https://localhost:8182/thaiid/read.jsonp?callback=callback&section1=true&section2a=true&section2c=true'
       script.async = true
       document.body.appendChild(script)

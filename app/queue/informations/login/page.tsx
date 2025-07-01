@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
 import { users } from '@/api/utils/mockuser'
 import styles from './Login.module.css'
+import { createHash } from 'crypto'
 
 export default function LoginPage() {
   const [password, setPassword] = useState('')
@@ -13,16 +14,24 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const hashedPassword = await hashPassword(password)
+
+    console.log('🔐 เริ่มทำการเข้าสู่ระบบ...')
+
+    const hashedPassword = hashPassword(password)
+    console.log('รหัสผ่าน (หลังแฮช):', hashedPassword)
 
     const matchedUser = users.find(
       (user) => user.username === 'admin' && user.password === hashedPassword
     )
 
+    console.log('ผลลัพธ์การจับคู่ผู้ใช้:', matchedUser)
+
     if (matchedUser) {
+      console.log('✅ เข้าสู่ระบบสำเร็จ: เป็นแอดมิน')
       sessionStorage.setItem('isAdmin', 'true')
       router.push('/queue/informations/admin')
     } else {
+      console.log('❌ เข้าสู่ระบบไม่สำเร็จ: รหัสผ่านไม่ถูกต้อง')
       setError('รหัสผ่านไม่ถูกต้อง')
     }
   }
@@ -52,10 +61,6 @@ export default function LoginPage() {
   )
 }
 
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+function hashPassword(password: string): string {
+  return createHash('sha256').update(password).digest('hex')
 }
