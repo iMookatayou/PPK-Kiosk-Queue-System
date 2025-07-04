@@ -30,6 +30,9 @@ const fetchLastQueue = async (): Promise<number> => {
   try {
     const res = await fetch('/api/queue/last-queue')
     const data = await res.json()
+
+    console.log("datafetchlastqueue" ,data);
+    
     return data.lastQueue ?? 0
   } catch (err) {
     console.warn('⚠️ ดึงคิวล่าสุดล้มเหลว', err)
