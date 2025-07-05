@@ -24,59 +24,68 @@ function getQueuePaths(date: string) {
     queueFile: path.join(dir, `${date}.json`),
     logFile: path.join(dir, `${date}-log.json`),
     patientFile: path.join(dir, `${date}-patients.json`),
+    morningFlagFile: path.join(dir, `${date}-reset-morning.flag`),
+    eveningFlagFile: path.join(dir, `${date}-reset-evening.flag`),
     flagFile: path.join(dir, `${date}-reset.flag`),
-  }
-}
-
-// รีเซ็ตคิวอัตโนมัติหากยังเป็นข้อมูลเก่า หรืออยู่นอกเวลาให้บริการ
-export async function autoResetOnStartup(): Promise<boolean> {
-  const now = dayjs().tz(TIMEZONE)
-  const today = getStrictToday()
-  const hour = now.hour()
-  const minute = now.minute()
-  const { queueFile, flagFile } = getQueuePaths(today)
-
-  let queueData: { lastQueue: number; date?: string } = { lastQueue: 0 }
-  try {
-    const content = await fs.readFile(queueFile, 'utf-8')
-    queueData = JSON.parse(content)
-  } catch {}
-
-  const isBefore630 = hour < 6 || (hour === 6 && minute < 30)
-  const isAfter1620 = hour > 16 || (hour === 16 && minute >= 20)
-  const isResetTime = isBefore630 || isAfter1620
-
-  const dataDate = queueData.date
-  const currentQueue = queueData.lastQueue || 0
-  const isTodayData = dataDate === today
-
-  const shouldReset = !isTodayData || (isResetTime && currentQueue > 0)
-
-  if (shouldReset) {
-    const resetData = {
-      lastQueue: 0,
-      date: today,
-    }
-    await fs.writeFile(queueFile, JSON.stringify(resetData, null, 2), 'utf-8')
-    await fs.writeFile(flagFile, `Auto reset at ${now.format()}`)
-    console.log(`[AUTO RESET] ✅ ล้างคิวอัตโนมัติ @ ${now.format()}`)
-    return true
-  } else {
-    console.log('[AUTO RESET] ℹ️ ไม่ต้องรี คิวถูกต้องอยู่แล้ว')
-    return false
+    backupFile: path.join(dir, `${date}-backup.json`)
   }
 }
 
 export async function getLastQueue(): Promise<number> {
   const today = getStrictToday()
   const { queueFile } = getQueuePaths(today)
+
   try {
     const content = await fs.readFile(queueFile, 'utf-8')
     const data = JSON.parse(content)
-    return data.lastQueue || 0
+    return data.lastQueue ?? 0
   } catch {
     return 0
   }
+}
+
+let lastCheckedAt: number | null = null
+
+export async function autoResetOnStartup(): Promise<boolean> {
+  const now = dayjs().tz(TIMEZONE)
+  const nowHM = now.hour() * 60 + now.minute()
+  const today = getStrictToday()
+  const { dir, queueFile } = getQueuePaths(today)
+
+  await fs.mkdir(dir, { recursive: true })
+
+  const isResetTime = nowHM < 390 || nowHM >= 980 // ก่อน 6:30 หรือหลัง 16:20
+
+  let shouldReset = false
+  let previousQueue = 0
+
+  try {
+    const content = await fs.readFile(queueFile, 'utf-8')
+    const data = JSON.parse(content)
+    previousQueue = data.lastQueue ?? 0
+
+    if (data.date !== today || (isResetTime && data.lastQueue !== 0)) {
+      shouldReset = true
+    }
+  } catch (err) {
+    shouldReset = true // ไม่มีไฟล์หรือพัง = รีเลย
+  }
+
+  if (shouldReset) {
+    const resetData = {
+      lastQueue: 0,
+      date: today,
+      previous: {
+        queue: previousQueue,
+        label: `หมายเลขคิวก่อนรีเซ็ตคือ ${previousQueue}`
+      }
+    }
+    await fs.writeFile(queueFile, JSON.stringify(resetData, null, 2), 'utf-8')
+    console.log(`✅ [AUTO RESET] คิวถูกรีแล้ว: ${now.format('HH:mm')} queue=0 (เก่า=${previousQueue})`)
+    return true
+  }
+
+  return false
 }
 
 export async function updateQueueFromAdmin(newQueue: number): Promise<void> {

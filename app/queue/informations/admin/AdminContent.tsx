@@ -34,7 +34,7 @@ export default function AdminPage() {
 
   const fetchLatestQueue = async () => {
     try {
-      const res = await fetch('/api/queue/latest')
+      const res = await fetch('/api/queue/last-queue')
       const data = await res.json()
       if (res.ok) {
         setLatestQueue(data.lastQueue)
@@ -57,7 +57,7 @@ export default function AdminPage() {
       const res = await fetch('/api/queue/admin-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newQueue: parsedQueue }),
+        body: JSON.stringify({ newQueue: parsedQueue })
       })
       const result = await res.json()
       if (!res.ok) {
@@ -97,7 +97,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchLatestQueue()
-    const interval = setInterval(fetchLatestQueue, 3000)
+    const interval = setInterval(fetchLatestQueue, 5000)
     return () => clearInterval(interval)
   }, [])
 

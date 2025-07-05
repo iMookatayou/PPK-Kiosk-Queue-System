@@ -15,11 +15,11 @@
   font-weight: 700;
 }
 
-@font-face {
+/* @font-face {
   font-family: 'Orbitron';
   src: url('/fonts/orbitron/Orbitron-SemiBold.ttf') format('truetype');
   font-weight: 600;
-}
+} */
 
 
 :root {
