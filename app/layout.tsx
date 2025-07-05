@@ -1,20 +1,20 @@
 // app/layout.tsx
-
-import React from 'react'; // 👈 แก้จุดนี้!
 import './globals.css'
+import { autoResetOnStartup } from '@/lib/queue-server-admin' // ✅ เปลี่ยนชื่อและ path
 
 export const metadata = {
   title: 'ตู้กดหมายเลขรับบริการ',
   description: 'ค้นหาข้อมูลผู้ป่วยด้วย HN',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  await autoResetOnStartup() // ✅ เรียกใช้ตัวที่มีจริง
   return (
-    <html lang="en">
+    <html lang="th">
       <body>{children}</body>
     </html>
   )

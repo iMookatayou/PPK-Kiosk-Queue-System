@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { addQueue, getLastQueue } from '../../actions/queue'
-import { Clock, Printer, CheckCircle, Menu, X, Shield, LoaderCircle, Hourglass, } from 'lucide-react'
+import { Clock, Printer, CheckCircle, Menu, X, Shield, Hourglass } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import styles from './QueuePage.module.css'
+import { addQueue } from '@/lib/queue'
+import { getLastQueue } from '@/lib/queue-server-admin'
 
 declare global {
   interface Window {
@@ -13,13 +14,14 @@ declare global {
   }
 }
 
-const getServerTime = async (): Promise<string> => {
+const getServerTime = async (): Promise<Date | null> => {
   try {
     const res = await fetch('/api/time')
     const data = await res.json()
-    return data.formatted || new Date().toISOString()
-  } catch {
-    return new Date().toISOString()
+    return new Date(data.formatted)
+  } catch (err) {
+    console.error('⚠️ ใช้เวลา server ไม่ได้:', err)
+    return null
   }
 }
 
@@ -39,6 +41,7 @@ export default function QueuePage() {
   const [cardMessage, setCardMessage] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [canShowQueueButton, setCanShowQueueButton] = useState(false)
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const lastCitizenNo = useRef<string | null>(null)
@@ -51,6 +54,7 @@ export default function QueuePage() {
     setBirthDate('')
     setAge(0)
     setGender('-')
+    lastCitizenNo.current = null
   }
 
   useEffect(() => {
@@ -58,32 +62,50 @@ export default function QueuePage() {
   getLastQueue().then(setQueue)
 
   const updateTime = async () => {
-    const timeStr = await getServerTime()
-    setNow(timeStr)
+  const serverDate = await getServerTime()
+  if (!serverDate) return
 
-    const serverTime = new Date(timeStr)
-    const hour = serverTime.getHours()
-    const minute = serverTime.getMinutes()
+  setNow(serverDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }))
 
-    if (hour > 6 || (hour === 6 && minute >= 30)) {
-      setCanShowQueueButton(true)
-    } else {
-      setCanShowQueueButton(false)
-    }
+  const openTime = new Date(serverDate)
+  openTime.setHours(6, 30, 0, 0) // 06:30:00
+
+  const closeTime = new Date(serverDate)
+  closeTime.setHours(16, 20, 0, 0) // 16:20:00
+
+  const nowTime = serverDate.getTime()
+  const canOpen = nowTime >= openTime.getTime() && nowTime < closeTime.getTime()
+
+  setCanShowQueueButton(canOpen)
+}
+
+  // รีเซ็ตคิวอัตโนมัติทุก 5 นาที พร้อมเช็คผล
+  const resetInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/reset')
+        const result = await res.json()
+        if (result?.ok && result?.reset === true) {
+          const latest = await getLastQueue()
+          setQueue(latest)
+          setResetMessage('ระบบเริ่มคิวใหม่แล้ววันนี้')
+          sessionStorage.removeItem('currentQueue')
+          updateTime()
+        }
+      } catch (err) {
+        console.warn('[CLIENT] ⚠️ รีเซ็ตไม่สำเร็จ')
+      }
+    }, 60*1000)
+
+  updateTime()
+  const timer = setInterval(updateTime, 1000)
+  const queueUpdater = setInterval(() => getLastQueue().then(setQueue), 3000)
+
+  return () => {
+    clearInterval(timer)
+    clearInterval(queueUpdater)
+    clearInterval(resetInterval)
   }
-
-  updateTime() // เรียกครั้งแรก
-    const timer = setInterval(updateTime, 1000) // 🔥 ให้เวลาขยับเอง
-
-    const queueUpdater = setInterval(() => {
-      getLastQueue().then(setQueue)
-    }, 3000)
-
-    return () => {
-      clearInterval(timer)
-      clearInterval(queueUpdater)
-    }
-  }, [])
+}, [])
 
   useEffect(() => {
     window.callback = (data: any) => {
@@ -92,7 +114,6 @@ export default function QueuePage() {
       if (data?.CitizenNo) {
         if (data.CitizenNo !== lastCitizenNo.current) {
           console.log(`[thaiid] พบข้อมูลบัตรใหม่: ${data.CitizenNo}`)
-
           lastCitizenNo.current = data.CitizenNo
           setCardRead(true)
 
@@ -102,11 +123,12 @@ export default function QueuePage() {
           setAge(calcAgeFromBirth(data.BirthDate || ''))
           setGender(data.Gender === '1' ? 'ชาย' : data.Gender === '2' ? 'หญิง' : '-')
           setCardMessage('ข้อมูลบัตรของท่านเข้าแล้ว')
+        } else {
+          console.log('[thaiid] ข้ามการอ่านเพราะเป็นบัตรเดิม')
         }
       } else {
         if (cardRead) {
           console.warn('[thaiid] ❌ บัตรถูกถอดออก')
-          lastCitizenNo.current = null
           resetPatientData()
         }
       }
@@ -127,6 +149,7 @@ export default function QueuePage() {
         try {
           document.body.removeChild(script)
         } catch {}
+        setIsReadingCard(false)
       }, 1000)
     }, 1000)
 
@@ -243,90 +266,111 @@ export default function QueuePage() {
   }
 
   return (
-    <div className="pageBackground"> 
-    <div className={styles.header}>
-      <iframe ref={iframeRef} style={{ display: 'none' }} title="silent-print" />
-      <div className={styles.logoContainer}>
-        <img src="/images/logoppk2.png" alt="โลโก้" className={styles.logo} />
-        <h1 className={styles.hospitalName}>โรงพยาบาลพระปกเกล้าจันทบุรี</h1>
-      </div>
-      {clientReady && (
-        <>
-          <div className={styles.clock}>
-            <Clock style={{ marginRight: 8 }} /> เวลาปัจจุบัน: {now}
-          </div>
-          {cardMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                marginTop: 12,
-                padding: '8px 16px',
-                background: '#d4edda',
-                color: '#155724',
-                border: '1px solid #c3e6cb',
-                borderRadius: 8,
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                maxWidth: 480
-              }}
-            >
-              <CheckCircle size={20} /> {cardMessage}
-            </motion.div>
-          )}
-          
-          <div className={styles.card}>
-            <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
-            <div className={styles.queueSlotWrapper}>
-              <AnimatePresence mode="wait">
-                <motion.div key={queue} className={styles.queueNumber}>
-                  {queue ?? '-'}
-                </motion.div>
-              </AnimatePresence>
+    <div className="pageBackground">
+     <div className={styles.header}>
+        {/* ✅ บล็อกทั้งหน้า ถ้า system ยังไม่เปิด */}
+        {clientReady && !canShowQueueButton && (
+          <div className={styles.fullScreenBlocker} />
+        )}
+
+        <iframe ref={iframeRef} style={{ display: 'none' }} title="silent-print" />
+
+        {/* โลโก้ */}
+        <div className={styles.logoContainer}>
+          <img src="/images/logoppk2.png" alt="โลโก้" className={styles.logo} />
+          <h1 className={styles.hospitalName}>โรงพยาบาลพระปกเกล้าจันทบุรี</h1>
+        </div>
+
+        {clientReady && (
+          <>
+            {/* นาฬิกา */}
+            <div className={styles.clock}>
+              <Clock style={{ marginRight: 8 }} /> เวลาปัจจุบัน: {now}
             </div>
 
-           {canShowQueueButton ? (
-            <motion.button
-              onClick={handleAddQueue}
-              disabled={loading || cooldown}
-              className={`${styles.button} ${!cooldown ? styles.buttonActive : styles.buttonDisabled}`}
-              whileTap={{ scale: 0.96 }}
-            >
-              <Printer size={24} />
-              {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
-            </motion.button>
-          ) : (
-            <div className={styles.red}>
-              <div className={styles.waitingMessage}>
-                <Hourglass size={24} className={styles.hourglassFlip} />
-                <span style={{ marginLeft: 8 }}>ระบบจะเปิดรับคิวเวลา <strong>06:30 น.</strong></span>
+            {/* ข้อความสำเร็จ */}
+            {cardMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  marginTop: 12,
+                  padding: '8px 16px',
+                  background: '#d4edda',
+                  color: '#155724',
+                  border: '1px solid #c3e6cb',
+                  borderRadius: 8,
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  maxWidth: 480
+                }}
+              >
+                <CheckCircle size={20} /> {cardMessage}
+              </motion.div>
+            )}
+
+            {/* กล่องคิว */}
+            <div className={styles.card}>
+              <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
+              <div className={styles.queueSlotWrapper}>
+                <AnimatePresence mode="wait">
+                  <motion.div key={queue} className={styles.queueNumber}>
+                    {queue ?? '-'}
+                  </motion.div>
+                </AnimatePresence>
               </div>
+
+              {canShowQueueButton ? (
+                <motion.button
+                  onClick={handleAddQueue}
+                  disabled={loading || cooldown}
+                  className={`${styles.button} ${!cooldown ? styles.buttonActive : styles.buttonDisabled}`}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  <Printer size={24} />
+                  {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
+                </motion.button>
+              ) : (
+                <div className={styles.red}>
+                  <div className={styles.waitingMessage}>
+                    <Hourglass size={24} className={styles.hourglassFlip} />
+                    <span style={{ marginLeft: 8 }}>
+                      ระบบจะเปิดรับคิวเวลา <strong>06:30 น.</strong>
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
 
-          </div>
-
-          <div className={styles.hamburgerWrapper}>
-            <button className={styles.hamburgerButton} onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {menuOpen && (
-            <div className={styles.sidebarMenu}>
-              <button onClick={handleAdminClick} className={styles.menuItem}>
-                <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
+            {/* Hamburger menu */}
+            <div className={styles.hamburgerWrapper}>
+              <button
+                className={styles.hamburgerButton}
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                {menuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
-          )}
-        </>
-      )}
+
+            {/* เมนู admin */}
+            {menuOpen && (
+              <div className={styles.sidebarMenu}>
+                <button onClick={handleAdminClick} className={styles.menuItem}>
+                  <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
+                </button>
+                {resetMessage && (
+                  <div className={styles.resetInfo}>{resetMessage}</div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
-</div>
   )
 }

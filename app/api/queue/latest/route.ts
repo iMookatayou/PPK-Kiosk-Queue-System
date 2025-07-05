@@ -1,13 +1,14 @@
 // app/api/queue/latest/route.ts
+
 import { NextResponse } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
+import { getLastQueue } from '@/lib/queue-server-admin'
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), 'data', 'queues', '2025-06-27.json')
-  const file = await fs.readFile(filePath, 'utf-8')
-  const data = JSON.parse(file)
-  const latestQueue = data?.latestQueue ?? null
-
-  return NextResponse.json({ latestQueue })
+  try {
+    const lastQueue = await getLastQueue()
+    return NextResponse.json({ lastQueue })
+  } catch (err) {
+    console.error('[GET_LATEST_QUEUE_ERROR]', err)
+    return NextResponse.json({ error: 'ดึงคิวล่าสุดล้มเหลว' }, { status: 500 })
+  }
 }

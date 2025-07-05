@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getLastQueue } from '@/actions/queue'
 import { Wrench, Save, Trash2, LogOut, CheckCircle } from 'lucide-react'
 import styles from './AdminPage.module.css'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,7 +18,6 @@ export default function AdminPage() {
       router.replace('/queue/informations')
     }
 
-    // Block back button
     history.pushState(null, '', location.href)
     const handlePopState = () => {
       sessionStorage.removeItem('isAdmin')
@@ -35,8 +33,17 @@ export default function AdminPage() {
   }
 
   const fetchLatestQueue = async () => {
-    const queue = await getLastQueue()
-    setLatestQueue(queue)
+    try {
+      const res = await fetch('/api/queue/latest')
+      const data = await res.json()
+      if (res.ok) {
+        setLatestQueue(data.lastQueue)
+      } else {
+        console.warn(data?.error || 'ดึงคิวล่าสุดล้มเหลว')
+      }
+    } catch (err) {
+      console.error('Fetch latest queue error:', err)
+    }
   }
 
   const handleUpdateQueue = async () => {
@@ -47,7 +54,7 @@ export default function AdminPage() {
     }
 
     try {
-      const res = await fetch('/api/queue/update', {
+      const res = await fetch('/api/queue/admin-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newQueue: parsedQueue }),
@@ -70,7 +77,7 @@ export default function AdminPage() {
     if (!confirmed) return
 
     try {
-      const res = await fetch('/api/queue/reset', { method: 'POST' })
+      const res = await fetch('/api/queue/admin-reset', { method: 'POST' })
       const result = await res.json()
       if (!res.ok) {
         alert(result?.error || 'เกิดข้อผิดพลาดในการล้างคิว')

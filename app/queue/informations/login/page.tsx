@@ -36,6 +36,10 @@ export default function LoginPage() {
     }
   }
 
+  const handleBack = () => {
+    router.push('/queue/informations')
+  }
+
   return (
     <div className={styles['login-layout']}>
       <div className={styles['login-card']}>
@@ -52,9 +56,19 @@ export default function LoginPage() {
             />
           </div>
           {error && <p className={styles['error-message']}>{error}</p>}
-          <button type="submit" className={styles['login-button']}>
-            เข้าสู่ระบบ
-          </button>
+
+          <div className={styles['button-group']}>
+            <button type="submit" className={styles['login-button']}>
+              เข้าสู่ระบบ
+            </button>
+            <button
+              type="button"
+              className={styles['back-button']}
+              onClick={handleBack}
+            >
+              ย้อนกลับ
+            </button>
+          </div>
         </form>
       </div>
     </div>
