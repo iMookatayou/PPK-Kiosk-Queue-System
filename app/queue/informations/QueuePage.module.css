@@ -18,7 +18,7 @@
   font-display: swap;
 }
 
-/* พื้นหลังหลัก */
+/* ---------------------- พื้นหลังหลัก ---------------------- */
 .pageBackground {
   background-image: linear-gradient(to top, #f1f5f9, #e0f2fe);
   background-size: cover;
@@ -29,7 +29,7 @@
   width: 100%;
 }
 
-/* กล่องบนสุด */
+/* ---------------------- กล่องบนสุด ---------------------- */
 .header {
   min-height: 100vh;
   width: 100%;
@@ -38,7 +38,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 4rem 2rem;
+  padding: 3.6rem 2rem;
   box-sizing: border-box;
 }
 
@@ -47,102 +47,107 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 3rem;
+  margin-bottom: 3.2rem;
 }
 .logo {
-  width: 180px;
+  width: 180px; /* เพิ่มขึ้นนิดเดียว */
   height: auto;
   animation: bounce 2s infinite;
 }
 @keyframes bounce {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+  50% { transform: translateY(-10px); }
 }
 
-/* หัวแถบบน */
+/* ---------------------- หัวแถบบน ---------------------- */
 .hospitalBar {
   width: 100%;
   background: linear-gradient(to right, #e0f2fe, #dbeafe);
-  padding: 2.8rem 1.4rem;
+  padding: 2.6rem 1.4rem;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   border-radius: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 3.2rem;
 }
 .hospitalName {
   margin: 0;
-  font-size: 4.4rem;
+  font-size: 3.2rem; /* เพิ่มนิดเดียว */
   font-weight: bold;
   color: #1e3a8a;
   font-family: 'Sarabun', sans-serif;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 .enName {
   display: block;
-  font-size: 3.6rem;
+  font-size: 3rem; /* เพิ่มนิดเดียว */
   font-weight: bold;
-  color: #1e40af; 
-  margin-top: 0.6rem;
+  color: #1e40af;
+  margin-top: 0.5rem;
 }
 
-/* นาฬิกา */
+/* ---------------------- นาฬิกา ---------------------- */
 .clock {
-  font-size: 3.6rem;
-  margin: 2rem 0 1rem 0;
+  font-size: 2.4rem; /* เพิ่มนิดเดียว */
+  margin: 1.6rem 0 1rem 0;
   color: #1f2937;
   display: flex;
   align-items: center;
 }
+.clock svg {
+  width: 3.2rem;
+  height: 3.2rem;
+  margin-right: 0.9rem;
+}
 
-/* กล่องหลัก */
+/* ---------------------- กล่องหลัก ---------------------- */
 .card {
   width: 100%;
-  max-width: 960px;
+  max-width: 900px;
   background: white;
-  border-radius: 3rem;
-  padding: 5rem 4rem;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+  border-radius: 2.6rem;
+  padding: 4.2rem 3.2rem;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
   text-align: center;
-  margin-top: 4rem;
+  margin-top: 3.2rem;
   transition: transform 0.3s ease-in-out;
 }
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
 }
 
-/* ป้ายหมายเลขคิว */
+/* ---------------------- ป้ายหมายเลขคิว ---------------------- */
 .queueLabel {
-  font-size: 4.8rem;
+  font-size: 3.0rem;
   color: #1f2937;
   font-weight: 700;
   font-family: 'Sarabun', sans-serif;
-  margin-bottom: 3rem;
+  margin-bottom: 2.6rem;
 }
 .queueSlotWrapper {
   position: relative;
   width: 100%;
-  height: 260px;
+  height: 230px;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 3rem;
+  margin-bottom: 5rem;
 }
 .queueNumber {
-  font-size: 20rem;
+  font-size: 17rem; /* เพิ่มนิดเดียว */
   font-family: 'Orbitron', sans-serif;
   color: #1e40af;
   position: absolute;
-  letter-spacing: 10px;
+  letter-spacing: 9px;
 }
 
-/* ปุ่มรับคิว */
+/* ---------------------- ปุ่มรับคิว ---------------------- */
 .button {
   width: 100%;
-  padding: 2.8rem;
-  font-size: 3.6rem;
+  padding: 2.2rem;
+  font-size: 2.8rem; /* เพิ่มนิดเดียว */
   font-weight: bold;
-  border-radius: 2rem;
+  border-radius: 1.8rem;
   border: none;
   display: flex;
   justify-content: center;
@@ -154,11 +159,11 @@
 .buttonActive {
   background: linear-gradient(to right, red, red);
   color: white;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.4);
 }
 .buttonActive:hover {
   background: linear-gradient(to right, red, red);
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 .buttonDisabled {
   background-color: #e5e7eb;
@@ -166,59 +171,58 @@
   cursor: not-allowed;
 }
 
-/* กล่องข้อความแจ้งเตือน */
+/* ---------------------- กล่องข้อความแจ้งเตือน ---------------------- */
 .cardMessage {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #c7f9cc;      /* เขียวอ่อนสดใสขึ้น */
-  color: #065f46;                 /* เขียวเข้มอ่านง่าย */
-  border-radius: 20px;            /* มุมโค้งมากขึ้น */
-  padding: 24px 40px;             /* เพิ่ม padding ให้ใหญ่ขึ้น */
-  margin: 2rem auto;              /* เว้นระยะรอบๆ มากขึ้น */
+  background-color: #c7f9cc;
+  color: #065f46;
+  border-radius: 18px;
+  padding: 22px 34px;
+  margin: 1.8rem auto;
   width: fit-content;
   max-width: 95%;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); /* เงาชัดขึ้น */
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
   font-family: 'Sarabun', sans-serif;
-  gap: 24px;                      /* ระยะห่างระหว่าง icon กับข้อความ */
+  gap: 20px;
   text-align: center;
-  font-size: 3rem;                /* ขยายตัวอักษรให้ใหญ่ขึ้นชัดเจน */
-  font-weight: 700;               /* หนากว่าเดิม */
-  line-height: 1.4;
+  font-size: 2.6rem; /* เพิ่มนิดเดียว */
+  font-weight: 600;
+  line-height: 1.3;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
-
 .cardMessage svg {
-  width: 64px;  /* ขยายไอคอนให้ใหญ่ */
-  height: 64px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
 }
-
 .cardMessage:hover {
-  background-color: #b2f2bb;      /* สีเข้มขึ้นเมื่อ hover */
-  transform: translateY(-4px);    /* ลอยขึ้นนิดนึง */
+  background-color: #b2f2bb;
+  transform: translateY(-3px);
 }
-/* กล่องรอคิว */
+
+/* ---------------------- กล่องรอคิว ---------------------- */
 .waitingMessage {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  margin-top: 3rem;
-  font-size: 2.6rem;
-  font-weight: 600;
+  gap: 20px;
+  margin-top: 2.6rem;
+  font-size: 2.4rem; /* เพิ่มนิดเดียว */
+  font-weight: 500;
   background: #ffe5e5;
-  padding: 2rem 3rem;
-  border-radius: 1.6rem;
+  padding: 1.8rem 2.4rem;
+  border-radius: 1.4rem;
   color: #b91c1c;
   flex-direction: row;
 }
 
-/* นาฬิกาทราย */
+/* ---------------------- นาฬิกาทราย ---------------------- */
 .hourglassFlip {
   animation: hourglassFlipRealistic 5s ease-in-out infinite;
   transform-origin: center;
-  font-size: 3rem;
+  font-size: 2.6rem; /* เพิ่มนิดเดียว */
 }
 @keyframes hourglassFlipRealistic {
   0%, 10% { transform: rotate(0deg); }
@@ -226,11 +230,11 @@
   90%, 100% { transform: rotate(360deg); }
 }
 
-/* เมนู 3 ขีด */
+/* ---------------------- เมนู 3 ขีด ---------------------- */
 .hamburgerWrapper {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 18px;
+  left: 18px;
   z-index: 100;
 }
 .hamburgerButton {
@@ -243,12 +247,12 @@
 .sidebarMenu {
   position: absolute;
   top: 56px;
-  left: 16px;
+  left: 18px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  padding: 12px;
+  padding: 10px;
   z-index: 99;
 }
 .menuItem {
@@ -256,61 +260,16 @@
   align-items: center;
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: 1.4rem;
   cursor: pointer;
   color: #222;
   padding: 6px 12px;
 }
 
-/* นาฬิกาทรายใน .waitingMessage หรือที่ใช้ hourglassFlip */
+/* ---------------------- ขนาดของ icon นาฬิกาทราย ---------------------- */
 .waitingMessage svg,
 .cardMessage svg.hourglassFlip {
-  width: clamp(1.8rem, 2.4vw, 2.8rem);
-  height: clamp(1.8rem, 2.4vw, 2.8rem);
+  width: clamp(2rem, 2.6vw, 2.8rem);
+  height: clamp(2rem, 2.6vw, 2.8rem);
   flex-shrink: 0;
-}
-
-/* เพิ่ม class หากใช้ hourglassFlip */
-.hourglassFlip {
-  animation: hourglassFlipRealistic 5s ease-in-out infinite;
-  transform-origin: center;
-}
-
-/* animation เหมือนเดิม */
-@keyframes hourglassFlipRealistic {
-  0%, 10% { transform: rotate(0deg); }
-  40%, 60% { transform: rotate(180deg); }
-  90%, 100% { transform: rotate(360deg); }
-}
-
-/* Responsive ครบทุกกลุ่มจอ */
-@media screen and (max-width: 1024px) {
-  .hospitalName { font-size: 3rem; }
-  .enName { font-size: 2rem; }
-  .clock { font-size: 2.4rem; }
-  .queueNumber { font-size: 12rem; }
-  .queueLabel { font-size: 3.2rem; }
-  .button { font-size: 2.6rem; padding: 2rem; }
-  .card { padding: 3rem; }
-  .cardMessage { font-size: 1.6rem; }
-  .hourglassFlip { font-size: 2.4rem; }
-  .cardMessage svg {
-    width: 2rem;
-    height: 2rem;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .hospitalName { font-size: 2.6rem; }
-  .enName { font-size: 1.8rem; }
-  .clock { font-size: 2rem; }
-  .queueNumber { font-size: 8rem; }
-  .button { font-size: 2rem; padding: 1.6rem; }
-  .card { padding: 2rem; }
-  .cardMessage { font-size: 1.4rem; padding: 1rem; }
-  .hourglassFlip { font-size: 2rem; }
-   .cardMessage svg {
-    width: 1.6rem;
-    height: 1.6rem;
-   }
 }

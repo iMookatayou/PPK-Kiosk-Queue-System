@@ -594,11 +594,11 @@ const handlePrint = (queueNumber: number) => {
       <div className={styles.clock}>
         <Clock
           style={{
-            marginRight: 16,
-            fontSize: '5rem',
-            width: '5rem',
-            height: '5rem'
-          }}
+            marginRight: 8,       // ลดระยะห่าง
+            fontSize: '3rem',     // ย่อฟอนต์
+            width: '3rem',        // ย่อความกว้าง
+            height: '3rem'        // ย่อความสูง
+          }}  
         />
         เวลาปัจจุบัน: {now}
       </div>
