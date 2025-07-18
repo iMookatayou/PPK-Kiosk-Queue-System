@@ -527,15 +527,15 @@ const handlePrint = (queueNumber: number) => {
   }
   
 
-  return (
+return (
   <div className="pageBackground">
     <div className={styles.header}>
-      {/* Overlay บล็อกทุกคลิกยกเว้นปุ่มสำคัญ */}
+      {/* Overlay */}
       {clientReady && !canShowQueueButton && (
         <div className={styles.fullScreenBlocker}></div>
       )}
 
-      {/* Hidden Iframe สำหรับพิมพ์ */}
+      {/* Hidden Iframe */}
       <iframe ref={iframeRef} style={{ display: 'none' }} title="silent-print" />
 
       {/* โลโก้ */}
@@ -549,84 +549,66 @@ const handlePrint = (queueNumber: number) => {
         </div>
       </div>
 
-      {typeof cardMessage === 'string' && cardMessage.trim() && (
-        <motion.div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#c7f9cc',     // พื้นหลังเขียวอ่อน
-            color: '#065f46',
-            border: '3px solid #22c55e',
-            borderRadius: '16px',
-            padding: '16px 24px',           // padding กระชับลง
-            margin: '1.5rem auto',
-            fontFamily: 'Sarabun, sans-serif',
-            fontSize: '2.2rem',             // ลดฟอนต์ให้พอดีแถวเดียว
-            fontWeight: 700,
-            gap: '16px',                    // ระยะห่างระหว่างไอคอนกับข้อความ
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            maxWidth: '95%',
-            textAlign: 'center',
-            whiteSpace: 'nowrap'            // บังคับให้อยู่แถวเดียว
-          }}
-        >
-          <CheckCircle
-            style={{
-              width: '40px',                // ลดขนาดไอคอน
-              height: '40px',
-              flexShrink: 0
-            }}
-          />
-          <span
-            style={{
-              fontSize: '2.2rem',           // ลดฟอนต์ให้พอดี
-              fontWeight: 700,
-              lineHeight: 1
-            }}
-          >
-            {cardMessage}
-          </span>
-        </motion.div>
-      )}
-
-      {/* เวลา */}
-      <div className={styles.clock}>
-        <Clock
-          style={{
-            marginRight: 8,       // ลดระยะห่าง
-            fontSize: '3rem',     // ย่อฟอนต์
-            width: '3rem',        // ย่อความกว้าง
-            height: '3rem'        // ย่อความสูง
-          }}  
-        />
-        เวลาปัจจุบัน: {now}
+      {/* ✅ พื้นที่ popup เว้นไว้ตลอด */}
+      <div className={styles.popupSpace}>
+        {typeof cardMessage === 'string' && cardMessage.trim() ? (
+          <div className={styles.popupBox}>
+            <CheckCircle />
+            <span>{cardMessage}</span>
+          </div>
+        ) : (
+          <div style={{ height: '100%' }}></div>
+        )}
       </div>
 
-      {/* กล่องคิว */}
-      <div className={styles.card}>
-        <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
-        <div className={styles.queueSlotWrapper}>
-          <AnimatePresence mode="wait">
-            <motion.div key={queue} className={styles.queueNumber}>
-              {queue ?? '-'}
-            </motion.div>
-          </AnimatePresence>
+      {/* เวลา + กล่องคิว */}
+      <div className={styles.clockAndCardWrapper}>
+        {/* เวลา */}
+        <div className={styles.clock}>
+          <Clock
+            style={{
+              marginRight: 8,
+              fontSize: '3rem',
+              width: '3rem',
+              height: '3rem'
+            }}
+          />
+          เวลาปัจจุบัน: {now}
         </div>
 
-        <div className={styles.noneselect}>
-          {canShowQueueButton ? (
-            <>
-              {cardRead ? (
-                // มีบัตร
-                !cardMessage ? (
-                  // ยังไม่มีข้อความสิทธิ → แสดงสถานะกำลังโหลด
-                  <div className={styles.waitingMessage}>
-                    <Hourglass size={24} className={styles.hourglassFlip} />
-                    <span>กำลังตรวจสอบสิทธิการรักษา…</span>
-                  </div>
+        {/* กล่องคิว */}
+        <div className={styles.card}>
+          <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
+          <div className={styles.queueSlotWrapper}>
+            <AnimatePresence mode="wait">
+              <motion.div key={queue} className={styles.queueNumber}>
+                {queue ?? '-'}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className={styles.noneselect}>
+            {canShowQueueButton ? (
+              <>
+                {cardRead ? (
+                  !cardMessage ? (
+                    <div className={styles.waitingMessage}>
+                      <Hourglass size={24} className={styles.hourglassFlip} />
+                      <span>กำลังตรวจสอบสิทธิการรักษา…</span>
+                    </div>
+                  ) : (
+                    <motion.button
+                      onClick={handleAddQueue}
+                      disabled={loading || cooldown}
+                      className={`${styles.button} ${
+                        !cooldown ? styles.buttonActive : styles.buttonDisabled
+                      }`}
+                      whileTap={{ scale: 0.96 }}
+                    >
+                      {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
+                    </motion.button>
+                  )
                 ) : (
-                  // มีข้อความสิทธิแล้ว → กดได้
                   <motion.button
                     onClick={handleAddQueue}
                     disabled={loading || cooldown}
@@ -637,37 +619,24 @@ const handlePrint = (queueNumber: number) => {
                   >
                     {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
                   </motion.button>
-                )
-              ) : (
-                // ไม่มีบัตร → กดได้ทันที
-                <motion.button
-                  onClick={handleAddQueue}
-                  disabled={loading || cooldown}
-                  className={`${styles.button} ${
-                    !cooldown ? styles.buttonActive : styles.buttonDisabled
-                  }`}
-                  whileTap={{ scale: 0.96 }}
-                >
-                  {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
-                </motion.button>
-              )}
-            </>
-          ) : (
-            // อยู่นอกเวลาเปิดคิว
-            <div className={styles.red}>
-              <div className={styles.waitingMessage}>
-                <Hourglass size={24} className={styles.hourglassFlip} />
-                <span>
-                  ระบบจะเปิดเวลา <strong>{openTimeStr} น.</strong><br />
-                  และจะสิ้นสุดเวลา <strong>{closeTimeStr} น.</strong>
-                </span>
+                )}
+              </>
+            ) : (
+              <div className={styles.red}>
+                <div className={styles.waitingMessage}>
+                  <Hourglass size={24} className={styles.hourglassFlip} />
+                  <span>
+                    ระบบจะเปิดเวลา <strong>{openTimeStr} น.</strong><br />
+                    และจะสิ้นสุดเวลา <strong>{closeTimeStr} น.</strong>
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ปุ่มเมนู (≡) */}
+      {/* ปุ่มเมนู */}
       <div className={styles.hamburgerWrapper}>
         <button
           className={styles.hamburgerButton}
@@ -683,12 +652,11 @@ const handlePrint = (queueNumber: number) => {
           <button onClick={handleAdminClick} className={styles.menuItem}>
             <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
           </button>
-          {resetMessage && (
-            <div className={styles.resetInfo}>{resetMessage}</div>
-          )}
+          {resetMessage && <div className={styles.resetInfo}>{resetMessage}</div>}
         </div>
       )}
     </div>
   </div>
-)
+);
 }
+

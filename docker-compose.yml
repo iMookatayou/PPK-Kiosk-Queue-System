@@ -5,7 +5,7 @@ services:
     build:
       context: .
       args:
-        DATABASE_URL: mysql://dockeruser:supersecure@10.10.54.92:3306/dataqueue
+        DATABASE_URL: mysql://dockeruser:supersecure@192.168.1.113:3306/dataqueue
     container_name: superapp-web
     ports:
       - "4000:4000"
@@ -13,6 +13,12 @@ services:
       - .env
     environment:
       - TZ=Asia/Bangkok
-      - DATABASE_URL=mysql://dockeruser:supersecure@10.10.54.92:3306/dataqueue
+      - DATABASE_URL=mysql://dockeruser:supersecure@192.168.1.113:3306/dataqueue
     volumes:
       - ./data:/app/data
+
+#ให้พี่หมูเปลี่ยน database เป็น Port ตัวเองเลยครับใช้ docker compose up --build ได้ปกติเลยอย่าลืม ถ้าไม่ได้ลอง
+#docker compose build --no-cache ดูครับ
+
+#npx prisma generate
+#npx prisma migrate deploy ด้วยครับหากจำเป็น

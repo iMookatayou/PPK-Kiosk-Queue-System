@@ -1,11 +1,8 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
 }
 
 datasource db {
@@ -14,11 +11,11 @@ datasource db {
 }
 
 model DataQueue {
-  date           DateTime @id         // ใช้ date เป็น PRIMARY KEY
+  date           DateTime @id                   // ใช้ date เป็น PRIMARY KEY
   lastQueue      Int
-  previousQueue  Int?    @default(0)
-  source         String   @default("manual") // manual | auto
+  previousQueue  Int?      @default(0)
+  source         String    @default("manual")   // manual | auto
   location       String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
