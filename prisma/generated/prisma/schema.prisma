@@ -1,0 +1,26 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model DataQueue {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique // วันที่ (1 วัน 1 record)
+  lastQueue     Int // คิวล่าสุดของวัน
+  previousQueue Int // คิวที่เก็บหลังรีเซ็ท (ถ้ามี)
+  source        String   @default("manual") // manual | auto
+  location      String?
+  createdAt     DateTime @default(now()) // เวลา insert
+  updatedAt     DateTime @updatedAt // เวลาอัปเดตล่าสุด
+}

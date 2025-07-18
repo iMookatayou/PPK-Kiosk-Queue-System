@@ -9,8 +9,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'หมายเลขคิวไม่ถูกต้อง' }, { status: 400 })
     }
 
-    console.log('[API] รับค่าคิวใหม่:', newQueue)
+    console.log('[API] รับค่าคิวใหม่จาก Admin:', newQueue)
 
+    // ฟังก์ชันนี้จะเขียนลงทั้งไฟล์ JSON และฐานข้อมูล MySQL
     await updateQueueFromAdmin(newQueue)
 
     return NextResponse.json({

@@ -5,3 +5,4 @@ out/
 node_modules
 FrontAgent/
 FrontAgent
+/generated/prisma

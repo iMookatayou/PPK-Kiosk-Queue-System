@@ -4,16 +4,6 @@ export const metadata = {
   description: 'หน้าจัดการระบบโดยแอดมิน',
 }
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="th">
-      <body>
-        <main>{children}</main>
-      </body>
-    </html>
-  )
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }

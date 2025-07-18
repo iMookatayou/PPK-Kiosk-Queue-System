@@ -13,7 +13,6 @@ declare global {
   }
 }
 
-// ดึงเวลาจาก server
 const getServerTime = async (): Promise<Date | null> => {
   try {
     const res = await fetch('/api/time')
@@ -25,14 +24,10 @@ const getServerTime = async (): Promise<Date | null> => {
   }
 }
 
-// ดึงคิวล่าสุดจาก API
 const fetchLastQueue = async (): Promise<number> => {
   try {
     const res = await fetch('/api/queue/last-queue')
     const data = await res.json()
-
-    console.log("datafetchlastqueue" ,data);
-    
     return data.lastQueue ?? 0
   } catch (err) {
     console.warn('⚠️ ดึงคิวล่าสุดล้มเหลว', err)
@@ -40,14 +35,87 @@ const fetchLastQueue = async (): Promise<number> => {
   }
 }
 
+const fetchRights = async (
+  cid: string | null,
+  setInsuranceType: (val: string | null) => void,
+  setCardMessage: (msg: string | null) => void,
+  setInsuranceDetail: (val: {
+    insuranceType: string
+    startDate: string
+    expDate: string
+  } | null) => void
+) => {
+  if (!cid || cid.trim() === '') {
+    console.warn('[สิทธิ] ไม่มีเลขบัตรประชาชน')
+    setInsuranceType(null)
+    setCardMessage(null)
+    setInsuranceDetail(null)
+    return
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 3000) // ⏱ 3 วินาที timeout
+
+  try {
+    const res = await fetch(`/api/v1/searchCurrentByPID/${cid}`, {
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+
+    if (!res.ok) throw new Error('ไม่พบข้อมูลสิทธิ')
+
+    const data = await res.json()
+    const info = data.raw?.data || {}
+
+    const insclCode = info.maininscl_main?.trim() || info.inscl?.trim() || ''
+    const type = info.maininscl_name?.trim() || info.inscl_name?.trim() || '-'
+    const hospital = info.hmain_name?.trim() || ''
+
+    const full = `${insclCode ? `(${insclCode}) ` : ''}${type}${hospital ? ` (${hospital})` : ''}`
+
+    const startDate = info.startdate || '-'
+    const expDate = info.expdate || '-'
+
+    setInsuranceType(full)
+    setCardMessage(`สิทธิ: ${full}`)
+    setInsuranceDetail({ insuranceType: full, startDate, expDate })
+  } catch (err: any) {
+    clearTimeout(timeoutId)
+
+    const isAbort = err.name === 'AbortError' || err.message === '⏰ Timeout'
+
+    if (isAbort) {
+      console.warn('[สิทธิ] ดึงข้อมูลล้มเหลวเพราะ timeout (Abort)')
+    } else {
+      console.error('[สิทธิ] ดึงข้อมูลล้มเหลว:', err)
+    }
+
+    setInsuranceType(null)
+    setCardMessage('ไม่สามารถตรวจสอบสิทธิได้')
+    setInsuranceDetail(null)
+  }
+}
+
+const formatDate = (yyyymmdd: string): string => {
+  if (!yyyymmdd || yyyymmdd.length !== 8) return '-'
+  const year = yyyymmdd.substring(0, 4)
+  const month = yyyymmdd.substring(4, 6)
+  const day = yyyymmdd.substring(6, 8)
+  return `${day}/${month}/${year}`
+}
+
 export default function QueuePage() {
+  const lastCid = useRef<string | null>(null)  
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const [clientReady, setClientReady] = useState(false)
+  const [hasPrintedQueue, setHasPrintedQueue] = useState(false)
   const [queue, setQueue] = useState<number | null>(null)
   const [now, setNow] = useState('')
   const [name, setName] = useState('__________')
   const [birthDate, setBirthDate] = useState('')
   const [age, setAge] = useState(0)
   const [gender, setGender] = useState('-')
+  const [insuranceType, setInsuranceType] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [cooldown, setCooldown] = useState(false)
   const [printed, setPrinted] = useState(false)
@@ -57,6 +125,14 @@ export default function QueuePage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [canShowQueueButton, setCanShowQueueButton] = useState(false)
   const [resetMessage, setResetMessage] = useState<string | null>(null)
+  const [isFetchingRights, setIsFetchingRights] = useState(false)
+  const [openTimeStr, setOpenTimeStr] = useState('06:30')
+  const [closeTimeStr, setCloseTimeStr] = useState('16:20')
+  const [insuranceDetail, setInsuranceDetail] = useState<{
+    insuranceType: string
+    startDate: string
+    expDate: string
+  } | null>(null)
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const lastCitizenNo = useRef<string | null>(null)
@@ -69,139 +145,204 @@ export default function QueuePage() {
     setBirthDate('')
     setAge(0)
     setGender('-')
+    setInsuranceType(null)
+    setInsuranceDetail(null)
+    setHasPrintedQueue(false) 
     lastCitizenNo.current = null
   }
 
- useEffect(() => {
-  setClientReady(true)
+  const checkOverrideSetting = async () => {
+  try {
+    const res = await fetch('/api/settings')
+    if (!res.ok) throw new Error('โหลด settings ไม่สำเร็จ')
 
-  const updateTime = async () => {
+    const data = await res.json()
+    const override = data.override ?? {}
+
     const serverDate = await getServerTime()
-    if (!serverDate) return
+    if (!serverDate) {
+      setCanShowQueueButton(false)
+      return
+    }
 
-    setNow(serverDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }))
+    // fallback ไปใช้เวลา default ถ้า override ปิด
+    const openTimeStr = override.enabled ? override.openTime : '06:30'
+    const closeTimeStr = override.enabled ? override.closeTime : '16:20'
+
+    const [openH, openM] = openTimeStr.split(':').map(Number)
+    const [closeH, closeM] = closeTimeStr.split(':').map(Number)
 
     const openTime = new Date(serverDate)
-    openTime.setHours(6, 30, 0, 0)
+    openTime.setHours(openH, openM, 0, 0)
 
     const closeTime = new Date(serverDate)
-    closeTime.setHours(16, 20, 0, 0)
+    closeTime.setHours(closeH, closeM, 0, 0)
 
     const nowTime = serverDate.getTime()
     const isOpen = nowTime >= openTime.getTime() && nowTime < closeTime.getTime()
+
     setCanShowQueueButton(isOpen)
+    setOpenTimeStr(openTimeStr)
+    setCloseTimeStr(closeTimeStr)
+
+  } catch (err) {
+    console.warn('⚠️ ตรวจสอบเวลาเปิดรับคิวล้มเหลว', err)
+    setCanShowQueueButton(false)
   }
+}
 
-  const checkAutoReset = async () => {
-    const serverTime = await getServerTime()
-    if (!serverTime) return
+  useEffect(() => {
+    setClientReady(true)
 
-    const hour = serverTime.getHours()
-    const minute = serverTime.getMinutes()
-    const nowHM = hour * 60 + minute
-    const isResetTime = nowHM < 390 || nowHM >= 980 // ก่อน 6:30 หรือหลัง 16:20
+    const updateTime = async () => {
+      const serverDate = await getServerTime()
+      if (!serverDate) return
+      setNow(serverDate.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }))
+    }
 
-    if (isResetTime) {
+    let lastResetAt: number | null = null  // ตัวแปรเก็บเวลารีเซ็ตล่าสุด
+
+    const checkAutoReset = async () => {
+      const serverTime = await getServerTime()
+      if (!serverTime) return
+
       try {
-        const res = await fetch('/api/reset-check') //ไม่ได้ใช้ส่วนของ Api แล้วแต่ยังใช้ฟังส์ชั่นอยู่
-        const result = await res.json()
-        if (result?.ok && result?.reset === true) {
-          const latest = await fetchLastQueue()
-          setQueue(latest)
-          console.log('[CLIENT RESET] ✅ ระบบรีเซ็ตคิวสำเร็จ และอัปเดต queue =', latest)
+        const res = await fetch('/api/settings')
+        const data = await res.json()
+        const override = data.override ?? {}
+
+        const openTimeStr = override.enabled ? override.openTime : '06:30'
+        const closeTimeStr = override.enabled ? override.closeTime : '16:20'
+
+        const [openH, openM] = openTimeStr.split(':').map(Number)
+        const [closeH, closeM] = closeTimeStr.split(':').map(Number)
+
+        const nowHM = serverTime.getHours() * 60 + serverTime.getMinutes()
+        const openHM = openH * 60 + openM
+        const closeHM = closeH * 60 + closeM
+
+        const isResetTime = nowHM < openHM || nowHM >= closeHM
+
+        // ตรวจสอบการรีเซ็ตว่าได้ทำการรีเซ็ตแล้วในช่วงเวลานี้หรือไม่
+        if (isResetTime && (lastResetAt === null || Date.now() - lastResetAt >= 300000)) {  // 300000 ms = 5 minutes
+          const res = await fetch('/api/queue/reset')
+          const result = await res.json()
+          if (result?.success) {
+            console.log('[CLIENT RESET] ✅ รีคิวใหม่แล้ว')
+            setResetMessage(result.msg)
+            lastResetAt = Date.now()  // อัปเดตเวลารีเซ็ตล่าสุด
+          } else {
+            console.log('[CLIENT RESET] ⚠️ ไม่รีคิวซ้ำ:', result.msg)
+          }
         }
       } catch (err) {
+        console.error('❌ checkAutoReset ล้มเหลว', err)
       }
+
+      // โหลด queue ล่าสุดทุกครั้ง หลัง reset (หรือไม่ reset ก็ตาม)
+      const latest = await fetchLastQueue()
+      setQueue(latest)
     }
-  }
 
-  // ทำทันทีเมื่อโหลดหน้า
-  fetchLastQueue().then(setQueue)
-  updateTime()
-  checkAutoReset()
+        fetchLastQueue().then(setQueue)
+        checkOverrideSetting()
+        checkAutoReset()
 
-  // ตั้ง interval ต่าง ๆ
-  const timer = setInterval(updateTime, 1000) 
-  const queueUpdater = setInterval(() => fetchLastQueue().then(setQueue), 15000) // ทุก 15 วินาที
-  const autoResetTimer = setInterval(checkAutoReset, 30000) // ทุก 30 วินาที
+        const timeTimer = setInterval(updateTime, 1000)
+        const overrideTimer = setInterval(checkOverrideSetting, 5000)
+        const queueUpdater = setInterval(() => fetchLastQueue().then(setQueue), 15000)
+        const autoResetTimer = setInterval(checkAutoReset, 30000)
 
-  return () => {
-    clearInterval(timer)
-    clearInterval(queueUpdater)
-    clearInterval(autoResetTimer)
-  }
-}, [])
+        return () => {
+          clearInterval(timeTimer)
+          clearInterval(overrideTimer)
+          clearInterval(queueUpdater)
+          clearInterval(autoResetTimer)
+        }
+      }, [])
 
-  // กัน Copy / คลิกขวา / Ctrl+C / ลากข้อความ
-  useEffect(() => {
-    const prevent = (e: Event) => e.preventDefault()
+      useEffect(() => {
+        let cancelled = false;
 
-    document.addEventListener('contextmenu', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('dragstart', prevent)
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
-        e.preventDefault()
-        alert('ไม่อนุญาตให้ Copy เนื้อหา!')
-      }
-    })
+        const processCardData = (data: any) => {
+          setIsReadingCard(false)
 
-    return () => {
-      document.removeEventListener('contextmenu', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('dragstart', prevent)
-    }
-  }, [])
+          const isPresent = data?.card_present === true
+          const cid = data?.CitizenID?.trim() || null
 
-  useEffect(() => {
-    window.callback = (data: any) => {
-      setIsReadingCard(false)
+          // ไม่มีบัตร หรือบัตรเสียบแต่ไม่มี cid → ล้างเสมอ
+          if (!isPresent || !cid) {
+            console.warn('[thaiid] ❌ ไม่มีบัตร หรือบัตรข้อมูลไม่ครบ → ล้างข้อมูล')
+            resetPatientData()
+            lastCid.current = null
+            return
+          }
 
-      if (data?.CitizenNo) {
-        if (data.CitizenNo !== lastCitizenNo.current) {
-          console.log(`[thaiid] พบข้อมูลบัตรใหม่: ${data.CitizenNo}`)
-          lastCitizenNo.current = data.CitizenNo
+          // ถ้าเป็นบัตรเดิม → ข้าม
+          if (cid === lastCid.current) {
+            console.log('[thaiid] บัตรเดิม ยังไม่เปลี่ยน')
+            return
+          }
+
+          // พบข้อมูลบัตรใหม่
+          console.log(`[thaiid] ✅ พบข้อมูลบัตรใหม่: ${cid}`)
+          lastCid.current = cid
+          lastCitizenNo.current = cid
           setCardRead(true)
 
           const fullName = `${data.TitleNameTh || ''} ${data.FirstNameTh || ''} ${data.LastNameTh || ''}`.trim()
           setName(fullName || '__________')
           setBirthDate(data.BirthDate || '')
-          setAge(calcAgeFromBirth(data.BirthDate || ''))
+          setAge(data.Age || 0)
           setGender(data.Gender === '1' ? 'ชาย' : data.Gender === '2' ? 'หญิง' : '-')
-          setCardMessage('ข้อมูลบัตรของท่านเข้าแล้ว')
-        } else {
-          console.log('[thaiid] ข้ามการอ่านเพราะเป็นบัตรเดิม')
-        }
-      } else {
-        if (cardRead) {
-          console.warn('[thaiid] ❌ บัตรถูกถอดออก')
-          resetPatientData()
-        }
-      }
-    }
 
-    const interval = setInterval(() => {
-      if (isReadingCard) return
-      setIsReadingCard(true)
+          if (debounceTimer.current) clearTimeout(debounceTimer.current);
+            debounceTimer.current = setTimeout(() => {
 
-      const script = document.createElement('script')
-      script.src = 'https://localhost:8182/thaiid/read.jsonp?callback=callback&section1=true&section2a=true&section2c=true'
-      script.async = true
-      document.body.appendChild(script)
+              setIsFetchingRights(true);
+              fetchRights(cid, setInsuranceType, setCardMessage, setInsuranceDetail)
+                .finally(() => {
+                  setIsFetchingRights(false);
+                });
+            }, 800);
+            }; 
 
-      setTimeout(() => {
-        try {
-          document.body.removeChild(script)
-        } catch {}
-        setIsReadingCard(false)
-      }, 1000)
-    }, 1000)
+        // ตั้ง callback
+        window.callback = (data: any) => {
+          if (!cancelled) processCardData(data);
+        };
 
-    return () => {
-      delete window.callback
-      clearInterval(interval)
-    }
-  }, [cardRead, isReadingCard])
+        // loop ดึงข้อมูลบัตรจาก API ทุก 3 วิ
+        const loop = async () => {
+          while (!cancelled) {
+            if (!isReadingCard) {
+              setIsReadingCard(true);
+
+              const script = document.createElement('script');
+              script.src = 'http://localhost:5000/get_cid_data?callback=callback&section1=true&section2a=true&section2c=true';
+              script.async = true;
+              document.body.appendChild(script);
+
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              try {
+                document.body.removeChild(script);
+              } catch {}
+
+              setIsReadingCard(false);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1500)); 
+          }
+        };
+
+        loop();
+
+        return () => {
+          cancelled = true;
+          delete window.callback;
+          if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        };
+      }, []);
 
   const handleAddQueue = async () => {
     if (loading || cooldown) return
@@ -221,11 +362,25 @@ export default function QueuePage() {
     }
   }
 
-  const handlePrint = (queueNumber: number) => {
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+ const formatThaiDate = (yyyymmdd: string): string => {
+  if (!yyyymmdd || yyyymmdd.length !== 8) return '-'
+  const y = yyyymmdd.slice(0, 4)
+  const m = yyyymmdd.slice(4, 6)
+  const d = yyyymmdd.slice(6, 8)
+  return `${d}/${m}/${y}`
+}
+
+const handlePrint = (queueNumber: number) => {
+  const insuranceText = insuranceDetail?.insuranceType || '-'
+  const startDate = formatThaiDate(insuranceDetail?.startDate || '')
+  const expDate = formatThaiDate(insuranceDetail?.expDate || '')
+
+  const html = `<!DOCTYPE html>
+  <html><head><meta charset="utf-8">
     <link rel="stylesheet" href="/print-kiosk-optimized.css" />
     <title>Print</title></head><body>
     <div class="printArea">
+      <!-- Header -->
       <div class="headerRow">
         <div class="logoLeft">
           <img src="${location.origin}/images/logoppk.png" class="logo" />
@@ -235,16 +390,35 @@ export default function QueuePage() {
           <div class="titleLine">ผู้ป่วยใหม่ / ผิดนัด</div>
           <div class="subtitleLine">อาคารประชาธิปกศักดิเดชน์ 2</div>
           <div class="metaRow">วันเวลา: ${now}</div>
+          </div>
+      </div>
+      
+        <div class="centerLabels">
           <div class="queuetoplabel">จุดคัดกรอง</div>
           <div class="queueLabel">หมายเลขรับบริการ</div>
         </div>
-      </div>
-      <div class="queueBlock"><div class="queueNumber">${queueNumber}</div></div>
-      <div class="infoRow"><div><strong>ชื่อ-สกุล:</strong> ${name}</div></div>
-      <div class="infoRow"><div><strong>อายุ:</strong> ${age} ปี</div><div><strong>เพศ:</strong> ${gender}</div></div>
 
+    <!-- Queue Number -->
+        <div class="queueBlock"><div class="queueNumber">${queueNumber}</div></div>
+
+        <!-- Patient Info -->
+        <div class="infoGrid">
+          <div class="leftGroup">
+            <div><strong>ชื่อ-สกุล:</strong> ${name}</div>
+            <div class="inlineRow">
+              <span><strong>อายุ:</strong> ${age} ปี</span>
+              <span><strong>เพศ:</strong> ${gender}</span>
+            </div>
+            <div><strong>สิทธิการรักษา:</strong> ${insuranceText}</div>
+            <div><strong>วันเริ่มทำสิทธิการรักษา:</strong> ${startDate}</div>
+            <div><strong>วันหมดอายุสิทธืการรักษา:</strong> ${expDate}</div>
+          </div>
+        </div>
+
+      <!-- Instructions -->
+    <div class="formSection">
       <div class="instructions">
-        <p>🕖 จะเริ่มเรียกหมายเลขการให้บริการเวลา 07:00 น.</p>
+        <p>จะเริ่มเรียกหมายเลขการให้บริการเวลา 07:00 น.</p>
         <ul style="list-style-type: none; padding-left: 0;">
           <li>
             เหนื่อยหอบ แน่นหน้าอก ไข้สูง หน้ามืด →
@@ -259,6 +433,7 @@ export default function QueuePage() {
         </ul>
       </div>
 
+      <!-- Clinic Selection -->
       <div class="sectionTitle">ส่งห้องตรวจ <span class="smallNote">(เจ้าหน้าที่กรอก)</span></div>
       <div class="checkGrid">${[
         'จิตเวช', 'จักษุ', 'ทันตกรรม', 'ไตเทียม', 'สูติกรรม',
@@ -268,16 +443,17 @@ export default function QueuePage() {
         'ฉีดยา ชั้น 2', 'อายุรกรรมชั้น 3', 'ศัลยกรรมกระดูก', 'หน่วยตรวจพิเศษชั้น 4',
       ].map(item => `<div><input type="checkbox" /> ${item}</div>`).join('')}</div>
 
+      <!-- Other + Signature -->
       <div class="otherLine">
         <span>อื่นๆ</span> ......................................................................
       </div>
-
       <div class="signGroup">
         <span class="label">ลงชื่อผู้คัดกรอง</span>
         <span class="dots">......................................................................</span>
       </div>
 
       <div class="line"></div>
+    </div>
     </div>
   </body></html>`
 
@@ -304,6 +480,7 @@ export default function QueuePage() {
         document.body.removeChild(iframe)
         setPrinted(true)
         setLoading(false)
+        setHasPrintedQueue(true) 
         setTimeout(() => setCooldown(false), 1000)
         resetPatientData()
       }, 500)
@@ -321,14 +498,39 @@ export default function QueuePage() {
     return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25))
   }
 
+  useEffect(() => {
+    const blockEvent = (e: Event) => {
+      const target = e.target as HTMLElement
+      const isAllowed = target.tagName === 'INPUT' || target.tagName === 'BUTTON'
+      if (!isAllowed) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+
+    document.addEventListener('mousedown', blockEvent, true)
+    document.addEventListener('mouseup', blockEvent, true)
+    document.addEventListener('selectstart', blockEvent, true)
+    document.addEventListener('contextmenu', blockEvent, true)
+
+    return () => {
+      document.removeEventListener('mousedown', blockEvent, true)
+      document.removeEventListener('mouseup', blockEvent, true)
+      document.removeEventListener('selectstart', blockEvent, true)
+      document.removeEventListener('contextmenu', blockEvent, true)
+    }
+  }, [])
+
+
   const handleAdminClick = () => {
     router.push('/queue/informations/login')
   }
+  
 
   return (
   <div className="pageBackground">
     <div className={styles.header}>
-      {/* ✅ Overlay บล็อกทุกคลิกยกเว้นปุ่มสำคัญ */}
+      {/* Overlay บล็อกทุกคลิกยกเว้นปุ่มสำคัญ */}
       {clientReady && !canShowQueueButton && (
         <div className={styles.fullScreenBlocker}></div>
       )}
@@ -339,100 +541,152 @@ export default function QueuePage() {
       {/* โลโก้ */}
       <div className={styles.logoContainer}>
         <img src="/images/logoppk2.png" alt="โลโก้" className={styles.logo} />
-        <h1 className={styles.hospitalName}>โรงพยาบาลพระปกเกล้าจันทบุรี</h1>
+        <div className={styles.hospitalBar}>
+          <h1 className={styles.hospitalName}>
+            โรงพยาบาลพระปกเกล้าจันทบุรี<br />
+            <span className={styles.enName}>PHRAPOKKLAO HOSPITAL</span>
+          </h1>
+        </div>
       </div>
 
-      {clientReady && (
-        <>
-          {/* เวลา */}
-          <div className={styles.clock}>
-            <Clock style={{ marginRight: 8 }} /> เวลาปัจจุบัน: {now}
-          </div>
+      {typeof cardMessage === 'string' && cardMessage.trim() && (
+        <motion.div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#c7f9cc',     // พื้นหลังเขียวอ่อน
+            color: '#065f46',
+            border: '3px solid #22c55e',
+            borderRadius: '16px',
+            padding: '16px 24px',           // padding กระชับลง
+            margin: '1.5rem auto',
+            fontFamily: 'Sarabun, sans-serif',
+            fontSize: '2.2rem',             // ลดฟอนต์ให้พอดีแถวเดียว
+            fontWeight: 700,
+            gap: '16px',                    // ระยะห่างระหว่างไอคอนกับข้อความ
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            maxWidth: '95%',
+            textAlign: 'center',
+            whiteSpace: 'nowrap'            // บังคับให้อยู่แถวเดียว
+          }}
+        >
+          <CheckCircle
+            style={{
+              width: '40px',                // ลดขนาดไอคอน
+              height: '40px',
+              flexShrink: 0
+            }}
+          />
+          <span
+            style={{
+              fontSize: '2.2rem',           // ลดฟอนต์ให้พอดี
+              fontWeight: 700,
+              lineHeight: 1
+            }}
+          >
+            {cardMessage}
+          </span>
+        </motion.div>
+      )}
 
-          {/* ข้อความแจ้งผล */}
-          {cardMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                marginTop: 12,
-                padding: '8px 16px',
-                background: '#d4edda',
-                color: '#155724',
-                border: '1px solid #c3e6cb',
-                borderRadius: 8,
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                maxWidth: 480,
-              }}
-            >
-              <CheckCircle size={20} /> {cardMessage}
+      {/* เวลา */}
+      <div className={styles.clock}>
+        <Clock
+          style={{
+            marginRight: 16,
+            fontSize: '5rem',
+            width: '5rem',
+            height: '5rem'
+          }}
+        />
+        เวลาปัจจุบัน: {now}
+      </div>
+
+      {/* กล่องคิว */}
+      <div className={styles.card}>
+        <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
+        <div className={styles.queueSlotWrapper}>
+          <AnimatePresence mode="wait">
+            <motion.div key={queue} className={styles.queueNumber}>
+              {queue ?? '-'}
             </motion.div>
-          )}
+          </AnimatePresence>
+        </div>
 
-          {/* กล่องคิว */}
-          <div className={styles.card}>
-            <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
-            <div className={styles.queueSlotWrapper}>
-              <AnimatePresence mode="wait">
-                <motion.div key={queue} className={styles.queueNumber}>
-                  {queue ?? '-'}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* ✅ ปุ่มรับคิว */}
-            <div className={styles.noneselect}>
-            {canShowQueueButton ? (
-              <motion.button
-                onClick={handleAddQueue}
-                disabled={loading || cooldown}
-                className={`${styles.button} ${!cooldown ? styles.buttonActive : styles.buttonDisabled}`}
-                whileTap={{ scale: 0.96 }}
-              >
-                <Printer size={24} />
-                {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
-              </motion.button>
-            ) : (
-              <div className={styles.red}>
-                <div className={styles.waitingMessage}>
-                  <Hourglass size={24} className={styles.hourglassFlip} />
-                  <span style={{ marginLeft: 8 }}>
-                    ระบบจะเปิดรับคิวเวลา <strong>06:30 น.</strong>
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-          </div>
-
-          {/* ✅ ปุ่มเมนู (≡) */}
-          <div className={styles.hamburgerWrapper}>
-            <button
-              className={styles.hamburgerButton}
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {/* ✅ เมนู admin */}
-          {menuOpen && (
-            <div className={styles.sidebarMenu}>
-              <button onClick={handleAdminClick} className={styles.menuItem}>
-                <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
-              </button>
-              {resetMessage && (
-                <div className={styles.resetInfo}>{resetMessage}</div>
+        <div className={styles.noneselect}>
+          {canShowQueueButton ? (
+            <>
+              {cardRead ? (
+                // มีบัตร
+                !cardMessage ? (
+                  // ยังไม่มีข้อความสิทธิ → แสดงสถานะกำลังโหลด
+                  <div className={styles.waitingMessage}>
+                    <Hourglass size={24} className={styles.hourglassFlip} />
+                    <span>กำลังตรวจสอบสิทธิการรักษา…</span>
+                  </div>
+                ) : (
+                  // มีข้อความสิทธิแล้ว → กดได้
+                  <motion.button
+                    onClick={handleAddQueue}
+                    disabled={loading || cooldown}
+                    className={`${styles.button} ${
+                      !cooldown ? styles.buttonActive : styles.buttonDisabled
+                    }`}
+                    whileTap={{ scale: 0.96 }}
+                  >
+                    {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
+                  </motion.button>
+                )
+              ) : (
+                // ไม่มีบัตร → กดได้ทันที
+                <motion.button
+                  onClick={handleAddQueue}
+                  disabled={loading || cooldown}
+                  className={`${styles.button} ${
+                    !cooldown ? styles.buttonActive : styles.buttonDisabled
+                  }`}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
+                </motion.button>
               )}
+            </>
+          ) : (
+            // อยู่นอกเวลาเปิดคิว
+            <div className={styles.red}>
+              <div className={styles.waitingMessage}>
+                <Hourglass size={24} className={styles.hourglassFlip} />
+                <span>
+                  ระบบจะเปิดเวลา <strong>{openTimeStr} น.</strong><br />
+                  และจะสิ้นสุดเวลา <strong>{closeTimeStr} น.</strong>
+                </span>
+              </div>
             </div>
           )}
-        </>
+        </div>
+      </div>
+
+      {/* ปุ่มเมนู (≡) */}
+      <div className={styles.hamburgerWrapper}>
+        <button
+          className={styles.hamburgerButton}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* เมนู admin */}
+      {menuOpen && (
+        <div className={styles.sidebarMenu}>
+          <button onClick={handleAdminClick} className={styles.menuItem}>
+            <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
+          </button>
+          {resetMessage && (
+            <div className={styles.resetInfo}>{resetMessage}</div>
+          )}
+        </div>
       )}
     </div>
   </div>

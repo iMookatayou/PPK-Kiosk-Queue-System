@@ -36,6 +36,28 @@ body {
   align-items: flex-start;
   gap: 0.25rem;
   margin-bottom: 0.25rem;
+  padding-left: 0.7cm;
+}
+
+.centerLabels {
+  text-align: center;
+  margin-top: -0.15rem;
+  padding-left: 1.7cm;
+}
+
+.queuetoplabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+}
+
+.queueLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+  text-align: center;       
+  margin-left: 0;          
+  padding-left: 0;         
 }
 
 .logoLeft {
@@ -47,19 +69,16 @@ body {
   width: 100%;
   height: auto;
 }
-
 .logoCaption {
   font-size: 0.75rem;
   margin-top: 2mm;
   text-align: center;
   font-weight: 500;
 }
-
-/* Text ข้างโลโก้ */
 .headerText {
   flex: 1;
   line-height: 1.2;
-  margin-top: 2mm; /* ทำให้ข้อความอยู่ต่ำกว่าโลโก้เล็กน้อย */
+  margin-top: 2mm;
 }
 .topTitle {
   font-size: 0.85rem;
@@ -79,16 +98,13 @@ body {
   margin: 0.1rem 0 0.35rem;
   padding-top: 0.2rem;
 }
-
 .queuetoplabel {
   font-size: 0.75rem;
   font-weight: 600;
   margin-bottom: 0.1rem;
   text-align: left;
-  margin-left: 1.2cm; 
-  padding-left: 0;     
+  margin-left: 1.2cm;
 }
-
 .queueLabel {
   font-size: 0.75rem;
   font-weight: 400;
@@ -116,38 +132,54 @@ body {
 }
 
 /* Patient Info */
-.infoRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
+.infoGrid {
   font-size: 0.7rem;
-  margin: 0.1rem 0;
-  line-height: 1.3;
+  margin: 0.1rem 0 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
-.infoRow div {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+.leftGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.leftGroup div {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+}
+.leftGroup .age-gender {
+  margin-top: -0.1rem;
+}
+.leftGroup .insurance-section {
+  margin-top: 0.3rem;
 }
 
 /* Instructions */
+.formSection {
+  padding-left: 0.3cm;
+  padding-right: 0.4cm;
+  margin-top: 0.3rem;
+}
 .instructions {
   background: #f8fafc;
   padding: 0.45rem 0.55rem;
   border-left: 2px solid #2563eb;
   border-radius: 0.4rem;
   font-size: 0.7rem;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
   line-height: 1.3;
 }
 .instructions p {
   font-weight: 600;
   margin-bottom: 0.35rem;
 }
-.instructions ol {
-  padding-left: 1rem;
+.instructions ul {
+  list-style-type: none;
+  padding-left: 0;
   margin: 0;
 }
 .instructions li {
@@ -163,39 +195,29 @@ body {
 .sectionTitle {
   font-size: 0.75rem;
   font-weight: 600;
-  margin: 0.8rem 0 0.3rem;
+  margin: 0.7rem 0 0.3rem;
 }
 .smallNote {
   font-size: 0.65rem;
   font-weight: 400;
 }
 
+/* Checkbox Grid */
 .checkGrid {
   display: grid;
-  grid-template-columns: 2.1cm 2.1cm 2.1cm; /* ✅ ขนาดคงที่แต่สมดุล */
+  grid-template-columns: 2.1cm 2.1cm 2.1cm;
   font-size: 0.65rem;
   gap: 0.12rem 0.35rem;
   margin-top: 0.2rem;
   margin-bottom: 0.3rem;
-
-  width: auto;
-  margin-left: 0.35cm;     /* ✅ ชิดซ้ายตรงหัวข้อ */
-  margin-right: auto;      /* ✅ ไม่ล้นขวา */
 }
-
-.checkGrid input[type='checkbox'] {
-  transform: scale(0.8);
-  margin-right: 0.25rem;
-}
-
 .checkGrid div {
   display: flex;
   align-items: center;
   gap: 0.2rem;
   white-space: nowrap;
-  line-height: 1.25;
+  line-height: 1.35;
 }
-
 .checkGrid input[type='checkbox'] {
   transform: scale(0.8);
   margin: 0;
@@ -203,30 +225,36 @@ body {
   top: 1px;
 }
 
-/* Other Line (ทั่วไป) */
+/* Other + Signature */
 .otherLine {
-  content: ' .................................';
   font-size: 0.65rem;
-  margin-top: 0.2rem;
-  padding-top: 0.2rem;
+  margin-top: 0.3rem;
 }
-
-/* Signature Line */
 .signGroup {
   font-size: 0.65rem;
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.6rem; /* ✅ เว้นระยะจากบรรทัดบน */
+  margin-top: 0.5rem;
   align-items: center;
 }
-
 .signGroup .label {
   white-space: nowrap;
 }
-
 .signGroup .dots {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.inlineRow {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+  margin-bottom: 0.2rem;
+}
+.inlineRow span {
+  white-space: nowrap;
+}
+

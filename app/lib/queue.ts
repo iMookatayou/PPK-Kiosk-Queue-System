@@ -5,95 +5,143 @@ import path from 'path'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { prisma } from '@/lib/prisma'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
 const TIMEZONE = 'Asia/Bangkok'
 
-function getStrictToday(): string {
+// ✅ คืนค่า 'YYYY-MM-DD' ของวันนี้ใน timezone ที่กำหนด
+function getToday(): string {
   return dayjs().tz(TIMEZONE).format('YYYY-MM-DD')
 }
 
-function getQueuePaths(date: string) {
+// ✅ คืนค่า Date ที่เป็น 00:00:00 UTC ของวันใน timezone Bangkok
+function getTodayMidnightUTC(): Date {
+  const now = dayjs().tz(TIMEZONE)
+  return new Date(Date.UTC(now.year(), now.month(), now.date()))
+}
+
+function getQueueFilePath(): string {
   const dir = path.join(process.cwd(), 'data', 'queues')
-  return {
-    dir,
-    queueFile: path.join(dir, `${date}.json`),
-    flagFile: path.join(dir, `${date}-reset.flag`),
+  return path.join(dir, `${getToday()}.json`)
+}
+
+async function loadSettings() {
+  try {
+    const content = await fs.readFile(path.join(process.cwd(), 'data/settings.json'), 'utf-8')
+    return JSON.parse(content)
+  } catch {
+    return {}
   }
 }
 
-// ตรวจสอบว่าอยู่นอกเวลาให้บริการหรือไม่
-function isResetTime(hour: number, minute: number): boolean {
-  return hour < 6 || (hour === 6 && minute < 30) || hour > 16 || (hour === 16 && minute >= 20)
+const validateTime = (time: string): string => {
+  const [h, m] = time.split(':').map(Number)
+  if (h < 0 || h > 23 || m < 0 || m > 59) return '00:00'
+  return time
 }
-
-// ป้องกัน log ซ้ำซ้อนจาก auto reset
-let lastCheckedAt: number | null = null
 
 export async function addQueue(): Promise<number> {
   const now = dayjs().tz(TIMEZONE)
-  const hour = now.hour()
-  const minute = now.minute()
-  const nowMs = now.valueOf()
-  const today = getStrictToday()
-  const { dir, queueFile, flagFile } = getQueuePaths(today)
+  const nowHM = now.hour() * 60 + now.minute()
+  const today = getToday()
+  const todayMidnightUTC = getTodayMidnightUTC()
+  const file = getQueueFilePath()
 
-  await fs.mkdir(dir, { recursive: true })
+  await fs.mkdir(path.dirname(file), { recursive: true })
 
-  let queueData: { lastQueue: number; date?: string } = { lastQueue: 0 }
+  let currentQueue = 0
+  let savedDate = ''
 
   try {
-    const content = await fs.readFile(queueFile, 'utf-8')
-    queueData = JSON.parse(content)
+    const content = await fs.readFile(file, 'utf-8')
+    const data = JSON.parse(content)
+    currentQueue = data.lastQueue || 0
+    savedDate = data.date || ''
   } catch {
-    // ยังไม่มีไฟล์ → ใช้ค่าเริ่มต้น
+    // ไม่มีไฟล์ ถือเป็นวันใหม่
   }
 
-  const currentQueue = queueData.lastQueue || 0
-  const isToday = queueData.date === today
-  const isOutOfTime = isResetTime(hour, minute)
+  const settings = await loadSettings()
+  const overrideEnabled = settings.override?.enabled === true
+  const overrideStart = validateTime(settings.override?.openTime || '06:30')
+  const overrideEnd = validateTime(settings.override?.closeTime || '16:20')
 
-  const flagExists = await fs.stat(flagFile).then(() => true).catch(() => false)
+  const [startH, startM] = overrideStart.split(':').map(Number)
+  const [endH, endM] = overrideEnd.split(':').map(Number)
+  const openHM = startH * 60 + startM
+  const closeHM = endH * 60 + endM
 
-  const needReset = !isToday || (isOutOfTime && currentQueue > 0 && !flagExists)
+  const isOpen = overrideEnabled
+    ? nowHM >= openHM && nowHM < closeHM
+    : nowHM >= 390 && nowHM < 980 // 06:30–16:20 default
 
-  // รีเซ็ตเมื่อจำเป็น (ไม่ใช่วันปัจจุบัน หรือคิวนอกเวลาและยังไม่เคยรี)
-  if (needReset) {
-    if (!lastCheckedAt || nowMs - lastCheckedAt > 60000) {
-      console.log(`[AUTO RESET] คิวถูกรีเซ็ต @ ${now.format('HH:mm')} (${!isToday ? 'ไม่ใช่ข้อมูลวันนี้' : `queue=${currentQueue}`})`)
-      lastCheckedAt = nowMs
+  const isOutdated = savedDate !== today
+  const isOutOfTime = !isOpen && currentQueue > 0
+  const shouldReset = isOutdated || isOutOfTime
+
+  if (shouldReset) {
+    const resetData = { lastQueue: 0, date: today }
+    await fs.writeFile(file, JSON.stringify(resetData, null, 2), 'utf-8')
+
+    try {
+      await prisma.dataQueue.update({
+        where: { date: todayMidnightUTC },
+        data: {
+          lastQueue: 0,
+          previousQueue: currentQueue,
+          source: 'auto',
+          location: null,
+        },
+      })
+    } catch {
+      await prisma.dataQueue.create({
+        data: {
+          date: todayMidnightUTC,
+          lastQueue: 0,
+          previousQueue: currentQueue,
+          source: 'auto',
+          location: null,
+        },
+      })
     }
 
-    const resetData = { lastQueue: 0, date: today }
-    await fs.writeFile(queueFile, JSON.stringify(resetData, null, 2), 'utf-8')
-    await fs.writeFile(flagFile, `Auto reset @ ${now.format()}`, 'utf-8')
-    return 0
+    console.log(`🔄 [RESET] คิวถูกรีเซ็ตเป็น 0 (เก่า ${currentQueue})`)
+    currentQueue = 0
   }
 
-  // เพิ่มคิวใหม่ในช่วงเวลาให้บริการ
-  if (!isOutOfTime) {
+  if (isOpen) {
     const nextQueue = currentQueue + 1
     const newData = { lastQueue: nextQueue, date: today }
-    await fs.writeFile(queueFile, JSON.stringify(newData, null, 2), 'utf-8')
+    await fs.writeFile(file, JSON.stringify(newData, null, 2), 'utf-8')
+
+    try {
+      await prisma.dataQueue.update({
+        where: { date: todayMidnightUTC },
+        data: { lastQueue: nextQueue },
+      })
+    } catch {
+      await prisma.dataQueue.create({
+        data: {
+          date: todayMidnightUTC,
+          lastQueue: nextQueue,
+          previousQueue: 0,
+          source: 'manual',
+          location: null, 
+        },
+      })
+    }
+
+    if (overrideEnabled) {
+      console.log(`[OVERRIDE] kiosk รับคิวได้เพราะ override admin เปิดไว้`)
+    }
+
     return nextQueue
   }
 
-  // ถ้าอยู่นอกเวลาทำการ
-  throw new Error('รับคิวได้เฉพาะเวลา 06:30 – 16:20 เท่านั้น')
-}
-
-// อ่านคิวล่าสุด
-export async function getLastQueue(): Promise<number> {
-  const today = getStrictToday()
-  const { queueFile } = getQueuePaths(today)
-
-  try {
-    const content = await fs.readFile(queueFile, 'utf-8')
-    const data = JSON.parse(content)
-    return data.lastQueue || 0
-  } catch {
-    return 0
-  }
+  throw new Error(
+    `รับคิวได้เฉพาะเวลา ${overrideStart} – ${overrideEnd} หรือให้แอดมินเปิด Override`
+  )
 }

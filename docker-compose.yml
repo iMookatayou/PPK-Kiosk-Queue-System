@@ -2,11 +2,17 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        DATABASE_URL: mysql://dockeruser:supersecure@10.10.54.92:3306/dataqueue
     container_name: superapp-web
     ports:
       - "4000:4000"
+    env_file:
+      - .env
     environment:
       - TZ=Asia/Bangkok
+      - DATABASE_URL=mysql://dockeruser:supersecure@10.10.54.92:3306/dataqueue
     volumes:
-      - ./data:/app/data  # แชร์ข้อมูลคิวออกมานอก container
+      - ./data:/app/data

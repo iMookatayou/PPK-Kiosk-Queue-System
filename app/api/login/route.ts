@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 const users = [
   {
     username: 'admin',
-    passwordHash: bcrypt.hashSync('123456', 10), // 🔐 เปลี่ยนรหัสตรงนี้
+    passwordHash: bcrypt.hashSync('123456', 10), // เปลี่ยนรหัสตรงนี้
   },
 ]
 
