@@ -304,7 +304,7 @@ export default function QueuePage() {
                 .finally(() => {
                   setIsFetchingRights(false);
                 });
-            }, 800);
+            }, 500);
             }; 
 
         // ตั้ง callback
@@ -331,7 +331,7 @@ export default function QueuePage() {
               setIsReadingCard(false);
             }
 
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
+            await new Promise(resolve => setTimeout(resolve, 1000)); 
           }
         };
 
@@ -551,13 +551,49 @@ return (
 
       {/* ✅ พื้นที่ popup เว้นไว้ตลอด */}
       <div className={styles.popupSpace}>
-        {typeof cardMessage === 'string' && cardMessage.trim() ? (
-          <div className={styles.popupBox}>
+        {typeof cardMessage === "string" && cardMessage.trim() ? (
+          <motion.div
+            key="popup"
+            className={styles.popupBox}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.3 }}
+          >
             <CheckCircle />
             <span>{cardMessage}</span>
-          </div>
+          </motion.div>
+
         ) : (
-          <div style={{ height: '100%' }}></div>
+          <motion.div
+            className={styles.popupBoxTransparent}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.img
+              src="/images/credit-card.png"
+              alt="เสียบบัตร"
+              animate={{
+                y: [0, -10, 0, -10, 0],  // เด้ง 2 ที
+              }}
+              transition={{
+                duration: 2,             // ระยะเวลาเด้ง 2 ทีรวมกัน
+                times: [0, 0.2, 0.4, 0.6, 0.8], // จังหวะของแต่ละ keyframe
+                repeat: Infinity,       // วน
+                repeatDelay: 1.5,       // หยุดพักก่อนรอบถัดไป
+                ease: "easeInOut",
+              }}
+              style={{
+                width: "80px",
+                height: "auto",
+                margin: "0 auto",
+                display: "block",
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+              }}
+            />
+          </motion.div>
         )}
       </div>
 

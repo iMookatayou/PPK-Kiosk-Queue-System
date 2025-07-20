@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    // 📊 เคส: Dashboard fetch ช่วงเวลา
+    // เคส: Dashboard fetch ช่วงเวลา
     if (body.startDate !== undefined && body.endDate !== undefined) {
       console.log('[API] ⏱️ startDate =', body.startDate)
       console.log('[API] ⏱️ endDate =', body.endDate)
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(data)
     }
 
-    // 🧩 เคส: บันทึกข้อมูลจาก reset หรือ admin
+    // เคส: บันทึกข้อมูลจาก reset หรือ admin
     const {
       date,
       lastQueue,

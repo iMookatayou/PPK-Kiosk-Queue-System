@@ -194,8 +194,8 @@
 .popupWrapper {
   position: fixed;
   top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px; /* ใช้ right แทน left */
+  transform: none; /* เอา translateX ออก */
   z-index: 9999;
 }
 

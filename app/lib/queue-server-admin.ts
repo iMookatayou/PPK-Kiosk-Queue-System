@@ -24,7 +24,7 @@ interface Settings {
   }
 }
 
-// ✅ คืนค่า Date ที่เป็น 00:00 UTC ของวันนั้นในเขตเวลา Bangkok
+// คืนค่า Date ที่เป็น 00:00 UTC ของวันนั้นในเขตเวลา Bangkok
 function getTodayMidnightUTC(): Date {
   const now = dayjs().tz(TIMEZONE)
   return new Date(Date.UTC(now.year(), now.month(), now.date()))

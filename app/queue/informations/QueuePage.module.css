@@ -153,7 +153,7 @@
 
 /* ---------------------- ป้ายหมายเลขคิว ---------------------- */
 .queueLabel {
-  font-size: 3rem;
+  font-size: 2.4rem;
   color: #1f2937;
   font-weight: 700;
   font-family: 'Sarabun', sans-serif;
@@ -164,32 +164,36 @@
 .queueSlotWrapper {
   position: relative;
   width: 100%;
-  height: 300px;
+  height: 240px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem; /* เพิ่มห่างจากปุ่มมากขึ้นอีกนิด */
+  padding: 1rem;
   background: none;
-  overflow: hidden;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* ตัวเลข */
+/* ตัวเลขคิว */
 .queueNumber {
-  font-size: 17rem;
-  font-family: 'Orbitron', sans-serif;
+  font-size: 15rem; /* ใหญ่พอแบบไม่ล้น */
+  font-family: 'Sarabun', sans-serif;
   color: #1e40af;
-  letter-spacing: 9px;
+  letter-spacing: 6px;
   line-height: 1;
   margin: 0;
   position: relative;
+  top: -20px; /* 👈 ขยับตัวเลขให้สูงกว่าปุ่มเล็กน้อย */
 }
+
 
 /* ---------------------- ปุ่มรับคิว ---------------------- */
 .button {
   width: 100%;
+  max-width: 420px; /* จำกัดขนาดให้ไม่ใหญ่เกิน */
   padding: 2.2rem;
-  font-size: 2.8rem;
+  font-size: 2.6rem;
   font-weight: bold;
   border-radius: 1.8rem;
   border: none;
@@ -199,16 +203,20 @@
   gap: 1rem;
   font-family: 'Sarabun', sans-serif;
   transition: background 0.3s, transform 0.2s ease-in-out;
+  margin: 0 auto; /* จัดให้อยู่กึ่งกลาง */
 }
+
+/* ปุ่มเมื่อ Active */
 .buttonActive {
   background: linear-gradient(to right, red, red);
   color: white;
   box-shadow: 0 8px 18px rgba(16, 185, 129, 0.4);
 }
 .buttonActive:hover {
-  background: linear-gradient(to right, red, red);
   transform: scale(1.03);
 }
+
+/* ปุ่ม Disabled */
 .buttonDisabled {
   background-color: #e5e7eb;
   color: #9ca3af;
@@ -285,4 +293,41 @@
   width: clamp(2rem, 2.6vw, 2.8rem);
   height: clamp(2rem, 2.6vw, 2.8rem);
   flex-shrink: 0;
+}
+
+.popupBox {
+  background-color: #2ecc71;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: inline-flex;     /* ใช้ inline-flex ให้กล่องขยายตามเนื้อหา */
+  align-items: center;
+  gap: 8px;
+  max-width: none;          /* ไม่มีจำกัดกว้าง */
+  white-space: nowrap;      /* ให้อยู่บรรทัดเดียว */
+  margin: 0 auto;
+}
+
+/* กำหนดข้อความให้ยืดหยุ่น และตัดท้ายนิดหน่อยถ้ายาว */
+.popupBox span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  flex-grow: 1;
+  min-width: 0;  /* สำคัญ! ให้ flexbox ตัดทอนข้อความได้ */
+}
+
+
+.popupBoxTransparent {
+  /* สไตล์สำหรับกรณีพื้นหลังโปร่งใส ไม่มี padding ไม่มี border */
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: unset;
+  display: block;
+  text-align: center;
 }
