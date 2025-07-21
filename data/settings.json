@@ -1,6 +1,6 @@
 {
   "override": {
-    "enabled": false,
+    "enabled": true,
     "openTime": "06:30",
     "closeTime": "16:20"
   }

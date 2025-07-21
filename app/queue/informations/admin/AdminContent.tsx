@@ -15,6 +15,34 @@ export default function AdminPage() {
   const router = useRouter()
 
   useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    const blockEvent = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const isAllowed =
+        target.tagName === 'INPUT' || target.tagName === 'BUTTON';
+      if (!isAllowed) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('mousedown', blockEvent, true);
+    document.addEventListener('mouseup', blockEvent, true);
+    document.addEventListener('selectstart', blockEvent, true);
+    document.addEventListener('contextmenu', blockEvent, true);
+
+    return () => {
+      document.removeEventListener('mousedown', blockEvent, true);
+      document.removeEventListener('mouseup', blockEvent, true);
+      document.removeEventListener('selectstart', blockEvent, true);
+      document.removeEventListener('contextmenu', blockEvent, true);
+    };
+  }, []);
+  
+  useEffect(() => {
     const isAdmin = sessionStorage.getItem('isAdmin')
     if (isAdmin !== 'true') {
       router.replace('/queue/informations')
@@ -163,44 +191,6 @@ export default function AdminPage() {
     fetchOverrideSetting()
     const interval = setInterval(fetchLatestQueue, 5000)
     return () => clearInterval(interval)
-  }, [])
-
-
-  useEffect(() => {
-    const prevent = (e: Event) => e.preventDefault()
-
-    // ป้องกันการคลิกขวา, เลือกข้อความ, ลากข้อความ
-    document.addEventListener('contextmenu', prevent)
-    document.addEventListener('selectstart', prevent)
-    document.addEventListener('dragstart', prevent)
-    
-    // ป้องกัน Ctrl+C หรือ Command+C
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
-        e.preventDefault()
-      }
-    })
-
-    // ป้องกันการคลิกโลโก้
-    const logo = document.querySelector('#logo') as HTMLElement | null  // การแคสท์เพื่อให้ TypeScript รู้ว่า logo เป็น HTMLElement
-    const preventLogoClick = (e: MouseEvent) => {
-      e.preventDefault()  // ป้องกันการทำงานจากการคลิก
-    }
-
-    // ตรวจสอบว่า logo มีค่าไม่เป็น null ก่อนที่จะเพิ่ม event listener
-    if (logo) {
-      logo.addEventListener('click', preventLogoClick)
-    }
-
-    // Clean up: ลบ event listener
-    return () => {
-      document.removeEventListener('contextmenu', prevent)
-      document.removeEventListener('selectstart', prevent)
-      document.removeEventListener('dragstart', prevent)
-      if (logo) {
-        logo.removeEventListener('click', preventLogoClick)
-      }
-    }
   }, [])
   
   return (

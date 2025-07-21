@@ -53,7 +53,34 @@ export default function QueueDashboard() {
   const itemsPerPage = 50
   const router = useRouter()
 
-  // ✅ ตรวจสิทธิ์
+  useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    const blockEvent = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const isAllowed =
+        target.tagName === 'INPUT' || target.tagName === 'BUTTON';
+      if (!isAllowed) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('mousedown', blockEvent, true);
+    document.addEventListener('mouseup', blockEvent, true);
+    document.addEventListener('selectstart', blockEvent, true);
+    document.addEventListener('contextmenu', blockEvent, true);
+
+    return () => {
+      document.removeEventListener('mousedown', blockEvent, true);
+      document.removeEventListener('mouseup', blockEvent, true);
+      document.removeEventListener('selectstart', blockEvent, true);
+      document.removeEventListener('contextmenu', blockEvent, true);
+    };
+  }, []);
+  
   useEffect(() => {
     const isAdmin = sessionStorage.getItem('isAdmin')
     if (isAdmin === 'true') {

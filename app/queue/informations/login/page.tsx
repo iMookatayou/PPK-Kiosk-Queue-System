@@ -13,6 +13,34 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
 
+  useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    const blockEvent = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const isAllowed =
+        target.tagName === 'INPUT' || target.tagName === 'BUTTON';
+      if (!isAllowed) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('mousedown', blockEvent, true);
+    document.addEventListener('mouseup', blockEvent, true);
+    document.addEventListener('selectstart', blockEvent, true);
+    document.addEventListener('contextmenu', blockEvent, true);
+
+    return () => {
+      document.removeEventListener('mousedown', blockEvent, true);
+      document.removeEventListener('mouseup', blockEvent, true);
+      document.removeEventListener('selectstart', blockEvent, true);
+      document.removeEventListener('contextmenu', blockEvent, true);
+    };
+  }, []);
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -40,29 +68,6 @@ export default function LoginPage() {
   const handleBack = () => {
     router.push('/queue/informations')
   }
-
-  useEffect(() => {
-    const blockEvent = (e: Event) => {
-      const target = e.target as HTMLElement
-      const isAllowed = target.tagName === 'INPUT' || target.tagName === 'BUTTON'
-      if (!isAllowed) {
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    }
-
-    document.addEventListener('mousedown', blockEvent, true)
-    document.addEventListener('mouseup', blockEvent, true)
-    document.addEventListener('selectstart', blockEvent, true)
-    document.addEventListener('contextmenu', blockEvent, true)
-
-    return () => {
-      document.removeEventListener('mousedown', blockEvent, true)
-      document.removeEventListener('mouseup', blockEvent, true)
-      document.removeEventListener('selectstart', blockEvent, true)
-      document.removeEventListener('contextmenu', blockEvent, true)
-    }
-  }, [])
 
   return (
     <div className={styles['login-layout']}>

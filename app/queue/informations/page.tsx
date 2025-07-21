@@ -138,6 +138,34 @@ export default function QueuePage() {
   const lastCitizenNo = useRef<string | null>(null)
   const router = useRouter()
 
+  useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    const blockEvent = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const isAllowed =
+        target.tagName === 'INPUT' || target.tagName === 'BUTTON';
+      if (!isAllowed) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('mousedown', blockEvent, true);
+    document.addEventListener('mouseup', blockEvent, true);
+    document.addEventListener('selectstart', blockEvent, true);
+    document.addEventListener('contextmenu', blockEvent, true);
+
+    return () => {
+      document.removeEventListener('mousedown', blockEvent, true);
+      document.removeEventListener('mouseup', blockEvent, true);
+      document.removeEventListener('selectstart', blockEvent, true);
+      document.removeEventListener('contextmenu', blockEvent, true);
+    };
+  }, []);
+
   const resetPatientData = () => {
     setCardRead(false)
     setCardMessage(null)
@@ -498,152 +526,125 @@ const handlePrint = (queueNumber: number) => {
     return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25))
   }
 
-  useEffect(() => {
-    const blockEvent = (e: Event) => {
-      const target = e.target as HTMLElement
-      const isAllowed = target.tagName === 'INPUT' || target.tagName === 'BUTTON'
-      if (!isAllowed) {
-        e.preventDefault()
-        e.stopPropagation()
-      }
-    }
-
-    document.addEventListener('mousedown', blockEvent, true)
-    document.addEventListener('mouseup', blockEvent, true)
-    document.addEventListener('selectstart', blockEvent, true)
-    document.addEventListener('contextmenu', blockEvent, true)
-
-    return () => {
-      document.removeEventListener('mousedown', blockEvent, true)
-      document.removeEventListener('mouseup', blockEvent, true)
-      document.removeEventListener('selectstart', blockEvent, true)
-      document.removeEventListener('contextmenu', blockEvent, true)
-    }
-  }, [])
-
-
   const handleAdminClick = () => {
     router.push('/queue/informations/login')
   }
-  
 
-return (
-  <div className="pageBackground">
-    <div className={styles.header}>
-      {/* Overlay */}
-      {clientReady && !canShowQueueButton && (
-        <div className={styles.fullScreenBlocker}></div>
-      )}
+  return (
+    <div className="pageBackground">
+      <div className={styles.header}>
+        {/* Overlay ปิดหน้าจอ */}
+        {clientReady && !canShowQueueButton && (
+          <div className={styles.fullScreenBlocker}></div>
+        )}
 
-      {/* Hidden Iframe */}
-      <iframe ref={iframeRef} style={{ display: 'none' }} title="silent-print" />
+        {/* Hidden Iframe */}
+        <iframe
+          ref={iframeRef}
+          style={{ display: 'none' }}
+          title="silent-print"
+        />
 
-      {/* โลโก้ */}
-      <div className={styles.logoContainer}>
-        <img src="/images/logoppk2.png" alt="โลโก้" className={styles.logo} />
-        <div className={styles.hospitalBar}>
-          <h1 className={styles.hospitalName}>
-            โรงพยาบาลพระปกเกล้าจันทบุรี<br />
-            <span className={styles.enName}>PHRAPOKKLAO HOSPITAL</span>
-          </h1>
+        {/* โลโก้ */}
+        <div className={styles.logoContainer}>
+          <img src="/images/logoppk2.png" alt="โลโก้" className={styles.logo} />
+          <div className={styles.hospitalBar}>
+            <h1 className={styles.hospitalName}>
+              โรงพยาบาลพระปกเกล้าจันทบุรี
+              <br />
+              <span className={styles.enName}>PHRAPOKKLAO HOSPITAL</span>
+            </h1>
+          </div>
         </div>
-      </div>
 
-      {/* ✅ พื้นที่ popup เว้นไว้ตลอด */}
-      <div className={styles.popupSpace}>
-        {typeof cardMessage === "string" && cardMessage.trim() ? (
-          <motion.div
-            key="popup"
-            className={styles.popupBox}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.3 }}
-          >
-            <CheckCircle />
-            <span>{cardMessage}</span>
-          </motion.div>
+        {/* ✅ พื้นที่ popup เว้นไว้ตลอด */}
+        <div className={styles.popupSpace}>
+          {typeof cardMessage === 'string' && cardMessage.trim() ? (
+            <motion.div
+              key="popup"
+              className={styles.popupBox}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CheckCircle />
+              <span>{cardMessage}</span>
+            </motion.div>
+          ) : (
+            <motion.div
+              className={styles.popupBoxTransparent}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <motion.img
+                src="/images/credit-card.png"
+                alt="เสียบบัตร"
+                animate={{ y: [0, -10, 0, -10, 0] }}
+                transition={{
+                  duration: 2,
+                  times: [0, 0.2, 0.4, 0.6, 0.8],
+                  repeat: Infinity,
+                  repeatDelay: 1.5,
+                  ease: 'easeInOut',
+                }}
+                style={{
+                  width: '80px',
+                  height: 'auto',
+                  margin: '0 auto',
+                  display: 'block',
+                  background: 'transparent',
+                  border: 'none',
+                  boxShadow: 'none',
+                }}
+              />
+            </motion.div>
+          )}
+        </div>
 
-        ) : (
-          <motion.div
-            className={styles.popupBoxTransparent}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <motion.img
-              src="/images/credit-card.png"
-              alt="เสียบบัตร"
-              animate={{
-                y: [0, -10, 0, -10, 0],  // เด้ง 2 ที
-              }}
-              transition={{
-                duration: 2,             // ระยะเวลาเด้ง 2 ทีรวมกัน
-                times: [0, 0.2, 0.4, 0.6, 0.8], // จังหวะของแต่ละ keyframe
-                repeat: Infinity,       // วน
-                repeatDelay: 1.5,       // หยุดพักก่อนรอบถัดไป
-                ease: "easeInOut",
-              }}
+        {/* เวลา + กล่องคิว */}
+        <div className={styles.clockAndCardWrapper}>
+          {/* เวลา */}
+          <div className={styles.clock}>
+            <Clock
               style={{
-                width: "80px",
-                height: "auto",
-                margin: "0 auto",
-                display: "block",
-                background: "transparent",
-                border: "none",
-                boxShadow: "none",
+                marginRight: 8,
+                fontSize: '3rem',
+                width: '3rem',
+                height: '3rem',
               }}
             />
-          </motion.div>
-        )}
-      </div>
-
-      {/* เวลา + กล่องคิว */}
-      <div className={styles.clockAndCardWrapper}>
-        {/* เวลา */}
-        <div className={styles.clock}>
-          <Clock
-            style={{
-              marginRight: 8,
-              fontSize: '3rem',
-              width: '3rem',
-              height: '3rem'
-            }}
-          />
-          เวลาปัจจุบัน: {now}
-        </div>
-
-        {/* กล่องคิว */}
-        <div className={styles.card}>
-          <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
-          <div className={styles.queueSlotWrapper}>
-            <AnimatePresence mode="wait">
-              <motion.div key={queue} className={styles.queueNumber}>
-                {queue ?? '-'}
-              </motion.div>
-            </AnimatePresence>
+            เวลาปัจจุบัน: {now}
           </div>
 
-          <div className={styles.noneselect}>
-            {canShowQueueButton ? (
-              <>
-                {cardRead ? (
-                  !cardMessage ? (
-                    <div className={styles.waitingMessage}>
-                      <Hourglass size={24} className={styles.hourglassFlip} />
-                      <span>กำลังตรวจสอบสิทธิการรักษา…</span>
-                    </div>
-                  ) : (
-                    <motion.button
-                      onClick={handleAddQueue}
-                      disabled={loading || cooldown}
-                      className={`${styles.button} ${
-                        !cooldown ? styles.buttonActive : styles.buttonDisabled
-                      }`}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
-                    </motion.button>
-                  )
+          {/* กล่องคิว */}
+          <div className={styles.card}>
+            <div className={styles.queueLabel}>หมายเลขรับบริการล่าสุด</div>
+            <div className={styles.queueSlotWrapper}>
+              <AnimatePresence mode="wait">
+                <motion.div key={queue} className={styles.queueNumber}>
+                  {queue ?? '-'}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Footer ปุ่ม/ข้อความ */}
+            <div className={styles.cardFooter}>
+              {!canShowQueueButton ? (
+                <div className={`${styles.waitingMessage} ${styles.waitingMessageClosed}`}>
+                  <Hourglass size={24} className={styles.hourglassFlip} />
+                  <span>
+                    ระบบจะเปิดเวลา <strong>{openTimeStr} น.</strong>
+                    <br />
+                    และจะสิ้นสุดเวลา <strong>{closeTimeStr} น.</strong>
+                  </span>
+                </div>
+              ) : cardRead ? (
+                !cardMessage ? (
+                  <div className={styles.waitingMessage}>
+                    <Hourglass size={24} className={styles.hourglassFlip} />
+                    <span>กำลังตรวจสอบสิทธิการรักษา…</span>
+                  </div>
                 ) : (
                   <motion.button
                     onClick={handleAddQueue}
@@ -655,44 +656,45 @@ return (
                   >
                     {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
                   </motion.button>
-                )}
-              </>
-            ) : (
-              <div className={styles.red}>
-                <div className={styles.waitingMessage}>
-                  <Hourglass size={24} className={styles.hourglassFlip} />
-                  <span>
-                    ระบบจะเปิดเวลา <strong>{openTimeStr} น.</strong><br />
-                    และจะสิ้นสุดเวลา <strong>{closeTimeStr} น.</strong>
-                  </span>
-                </div>
-              </div>
-            )}
+                )
+              ) : (
+                <motion.button
+                  onClick={handleAddQueue}
+                  disabled={loading || cooldown}
+                  className={`${styles.button} ${
+                    !cooldown ? styles.buttonActive : styles.buttonDisabled
+                  }`}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
+                </motion.button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ปุ่มเมนู */}
-      <div className={styles.hamburgerWrapper}>
-        <button
-          className={styles.hamburgerButton}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* เมนู admin */}
-      {menuOpen && (
-        <div className={styles.sidebarMenu}>
-          <button onClick={handleAdminClick} className={styles.menuItem}>
-            <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
+        {/* ปุ่มเมนู */}
+        <div className={styles.hamburgerWrapper}>
+          <button
+            className={styles.hamburgerButton}
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-          {resetMessage && <div className={styles.resetInfo}>{resetMessage}</div>}
         </div>
-      )}
-    </div>
-  </div>
-);
-}
 
+        {/* เมนู admin */}
+        {menuOpen && (
+          <div className={styles.sidebarMenu}>
+            <button onClick={handleAdminClick} className={styles.menuItem}>
+              <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
+            </button>
+            {resetMessage && (
+              <div className={styles.resetInfo}>{resetMessage}</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

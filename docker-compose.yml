@@ -5,7 +5,7 @@ services:
     build:
       context: .
       args:
-        DATABASE_URL: mysql://fenyb:0959611859Vi.@192.168.1.141:3306/dataqueue
+        DATABASE_URL: mysql://fenyb:0959611859Vi.@10.10.54.114:3306/dataqueue
     container_name: Queue-App
     ports:
       - "4000:4000"
@@ -13,16 +13,9 @@ services:
       - .env
     environment:
       - TZ=Asia/Bangkok
-      - DATABASE_URL=mysql://fenyb:0959611859Vi.@192.168.1.141:3306/dataqueue
+      - DATABASE_URL=mysql://fenyb:0959611859Vi.@10.10.54.114:3306/dataqueue
     volumes:
       - ./data:/app/data
-
-# ให้พี่หมูเปลี่ยน database เป็น Port ตัวเองเลยครับใช้ docker compose up --build ได้ปกติเลยอย่าลืม ถ้าไม่ได้ลอง
-# docker compose build --no-cache ดูครับ
-
-# npx prisma generate
-# npx prisma migrate deploy ด้วยครับหากจำเป็น
-
-#หลักๆที่กดไม่ได้อาจจะเกิดจาก ไม่มีตารางในระบบเฉยๆ ฝากพี่หมูด้วยนะครับ
+  
 
 

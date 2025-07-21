@@ -11,11 +11,14 @@ datasource db {
 }
 
 model DataQueue {
-  date           DateTime @id                   // ใช้ date เป็น PRIMARY KEY
-  lastQueue      Int
-  previousQueue  Int?      @default(0)
-  source         String    @default("manual")   // manual | auto
-  location       String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique 
+  lastQueue     Int
+  previousQueue Int?     @default(0)
+  source        String   @default("manual")
+  location      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([date, location]) // 👈 ถ้าคุณยังมีบรรทัดนี้อยู่
 }
