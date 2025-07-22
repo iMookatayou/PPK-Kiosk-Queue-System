@@ -253,7 +253,7 @@
   height: 100%;
   margin: 0;
   border-radius: 1.8rem;
-  font-size: 3rem;
+  font-size: 2.4em;
   font-weight: 700;
   display: flex;
   justify-content: center;
@@ -280,7 +280,7 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
-  font-size: 2.8rem;        /* ขยายตัวอักษร */
+  font-size: 2.6rem;        /* ขยายตัวอักษร */
   font-weight: 600;
   background: #ffe5e5;
   padding: 2rem 3rem;       /* ขยาย padding */

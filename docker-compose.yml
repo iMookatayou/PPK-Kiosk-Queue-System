@@ -5,7 +5,7 @@ services:
     build:
       context: .
       args:
-        DATABASE_URL: mysql://fenyb:0959611859Vi.@10.10.54.114:3306/dataqueue
+        DATABASE_URL: mysql://fenyb:0959611859Vi.@10.10.54.128:3306/dataqueue
     container_name: Queue-App
     ports:
       - "4000:4000"
@@ -13,7 +13,7 @@ services:
       - .env
     environment:
       - TZ=Asia/Bangkok
-      - DATABASE_URL=mysql://fenyb:0959611859Vi.@10.10.54.114:3306/dataqueue
+      - DATABASE_URL=mysql://fenyb:0959611859Vi.@10.10.54.128:3306/dataqueue
     volumes:
       - ./data:/app/data
   
