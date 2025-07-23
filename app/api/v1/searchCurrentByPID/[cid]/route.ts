@@ -20,7 +20,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid CID' }, { status: 400 })
   }
 
-  const backendURL = `http://172.16.78.22/nhso/api/v1/searchCurrentByPID/${cid}`
+  const baseURL = process.env.NHSO_API_BASE_URL
+  if (!baseURL) {
+    return NextResponse.json({ error: 'Config error: NHSO_API_BASE_URL not set' }, { status: 500 })
+  }
+
+  const backendURL = `${baseURL}/${cid}`
 
   try {
     const res = await fetch(backendURL, { cache: 'no-store' })
@@ -32,7 +37,6 @@ export async function GET(req: NextRequest) {
     const data = await res.json()
     const info = data?.data || {}
 
-    // ✅ รีบตอบทันทีถ้าไม่มีสิทธิ
     if (!info.maininscl) {
       return NextResponse.json({
         status: 'not_found',

@@ -63,16 +63,15 @@ async function resetQueueForce(): Promise<void> {
     where: { date: todayMidnight },
     update: {
       lastQueue: 0,
-      previousQueue,
-      source: 'manual',
+      source: 'manual', // อัปเดตเฉพาะนี้
     },
     create: {
       date: todayMidnight,
       lastQueue: 0,
-      previousQueue,
+      previousQueue,   // ใส่ตอน create ครั้งแรกเท่านั้น
       source: 'manual',
     },
-  })
+  })  
 }
 
 export async function POST() {
