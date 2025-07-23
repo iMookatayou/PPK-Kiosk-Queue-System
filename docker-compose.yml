@@ -5,17 +5,15 @@ services:
     build:
       context: .
       args:
-        DATABASE_URL: mysql://fenyb:0959611859Vi.@10.10.54.128:3306/dataqueue
+        # ส่งค่า DATABASE_URL เข้าไปตอน build จากไฟล์ .env
+        DATABASE_URL: ${DATABASE_URL}
     container_name: Queue-App
     ports:
       - "4000:4000"
     env_file:
-      - .env
+      - .env   # โหลดตัวแปรจากไฟล์ .env
     environment:
-      - TZ=Asia/Bangkok
-      - DATABASE_URL=mysql://fenyb:0959611859Vi.@10.10.54.128:3306/dataqueue
+      TZ: Asia/Bangkok
+      DATABASE_URL: ${DATABASE_URL}   # ใช้ค่าจาก .env
     volumes:
       - ./data:/app/data
-  
-
-
