@@ -649,21 +649,17 @@ const handlePrint = (queueNumber: number) => {
                   <motion.button
                     onClick={handleAddQueue}
                     disabled={loading || cooldown}
-                    className={`${styles.button} ${
-                      !cooldown ? styles.buttonActive : styles.buttonDisabled
-                    }`}
+                    className={`${styles.button} ${cardRead ? styles.cardInserted : styles.cardNotInserted}`}
                     whileTap={{ scale: 0.96 }}
                   >
                     {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
                   </motion.button>
                 )
               ) : (
-                <motion.button
+               <motion.button
                   onClick={handleAddQueue}
                   disabled={loading || cooldown}
-                  className={`${styles.button} ${
-                    !cooldown ? styles.buttonActive : styles.buttonDisabled
-                  }`}
+                  className={`${styles.button} ${cardRead ? styles.cardInserted : styles.cardNotInserted}`}
                   whileTap={{ scale: 0.96 }}
                 >
                   {loading ? 'กำลังพิมพ์...' : 'กดเพื่อรับ'}
