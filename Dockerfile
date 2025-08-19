@@ -28,7 +28,7 @@ RUN npm run build
 FROM node:22-slim
 
 # ติดตั้ง timezone และ openssl
-RUN apt-get update -y && apt-get install -y tzdata openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y tzdata openssl dos2unix && rm -rf /var/lib/apt/lists/*
 ENV TZ=Asia/Bangkok
 RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -50,7 +50,7 @@ ENV DATABASE_URL=${DATABASE_URL}
 
 # คัดลอก entrypoint script เข้าไป
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+RUN dos2unix /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 4000
 
