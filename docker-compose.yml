@@ -4,16 +4,12 @@ services:
   web:
     build:
       context: .
-      args:
-        # ส่งค่า DATABASE_URL เข้าไปตอน build จากไฟล์ .env
-        DATABASE_URL: ${DATABASE_URL}
-    container_name: Queue-App
+    container_name: queue-app
     ports:
       - "4000:4000"
     env_file:
-      - .env   # โหลดตัวแปรจากไฟล์ .env
+      - .env   # โหลด DATABASE_URL / NHSO_API_BASE_URL จากไฟล์นี้
     environment:
       TZ: Asia/Bangkok
-      DATABASE_URL: ${DATABASE_URL}   # ใช้ค่าจาก .env
-    volumes:
-      - ./data:/app/data
+    # volumes:                 # ถ้าต้องการแมปไฟล์
+    #   - ./data:/app/data
