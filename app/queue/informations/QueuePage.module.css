@@ -210,11 +210,18 @@
 /* =========================================================
    BUTTONS
    ========================================================= */
+/* === FIX: ให้ปุ่มใช้ Sarabun แบบไม่พึ่ง :global === */
 .button {
   width: 100%;
   padding: clamp(14px, 3.6vw, 28px) 1.6rem;
   font-size: clamp(18px, 4.4vw, 30px);
   font-weight: 700;
+
+  /* สำคัญสุดอยู่ 3 บรรทัดนี้ */
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: 'Sarabun' !important;
+
   border-radius: 2rem;
   border: none;
   display: flex;
@@ -224,20 +231,16 @@
   transition: background .3s, transform .2s ease-in-out;
 }
 
-.buttonActive {
-  background: red;
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(16,185,129,.4);
+/* ให้ state ต่างๆ สืบทอดฟอนต์แน่นอน */
+.buttonActive,
+.buttonDisabled,
+.cardFooter .button {
+  font-family: 'Sarabun' !important;
 }
 
-.buttonActive:hover {
-  transform: scale(1.03);
-}
-
-.buttonDisabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
+/* กันตัวลูกในปุ่ม (เช่น <span>) เผลอ override ฟอนต์ */
+.button * {
+  font-family: inherit !important;
 }
 
 /* =========================================================
@@ -490,3 +493,4 @@
   70%  { transform: rotate(360deg); } /* ใช้เวลาเยอะช่วงหมุน */
   100% { transform: rotate(360deg); } /* ค้างพักเล็กน้อยก่อนเริ่มรอบใหม่ */
 }
+
