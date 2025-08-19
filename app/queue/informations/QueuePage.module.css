@@ -71,11 +71,6 @@
   animation: bounce 2s infinite;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0) }
-  50% { transform: translateY(-6px) }
-}
-
 /* =========================================================
    TITLE
    ========================================================= */
@@ -480,4 +475,18 @@
     width: 16px;
     height: 16px;
   }
+}
+
+/* ===== Hourglass: หมุนช้า ๆ ทีละรอบ ===== */
+.hourglassFlip {
+  display: inline-block;
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: hourglass-slow-spin 4s ease-in-out infinite;
+}
+
+@keyframes hourglass-slow-spin {
+  0%   { transform: rotate(0deg); }
+  70%  { transform: rotate(360deg); } /* ใช้เวลาเยอะช่วงหมุน */
+  100% { transform: rotate(360deg); } /* ค้างพักเล็กน้อยก่อนเริ่มรอบใหม่ */
 }
