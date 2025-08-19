@@ -300,7 +300,7 @@ export default function AdminPage() {
 
           <div className={styles.buttonGroup} style={{ marginTop: '1rem' }}>
             <button
-              onClick={() => router.push('/queue/informations/admin/dashboard')}
+              onClick={() => router.push('/queue/informations/dashboard')}
               className={styles.button}
               style={{ backgroundColor: '#4e73df', color: 'white' }}
             >

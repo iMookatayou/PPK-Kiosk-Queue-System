@@ -1,25 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts'
 import {
-  BarChart as BarChartIcon,
-  Table as TableIcon,
-  ArrowLeftCircle,
-  LogOut,
-  ChevronsLeft,
-  ChevronsRight,
+  BarChart as BarChartIcon, Table as TableIcon,
+  ArrowLeftCircle, LogOut, ChevronsLeft, ChevronsRight,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import styles from './Dashboard.module.css'
 
 interface QueueRecord {
@@ -28,7 +18,6 @@ interface QueueRecord {
   previousQueue?: number
   source: string
 }
-
 interface DisplayQueue {
   date: string
   totalQueues: number
@@ -43,54 +32,35 @@ const TIME_OPTIONS = [
 ]
 
 export default function QueueDashboard() {
-  const [authorized, setAuthorized] = useState<boolean | null>(null)
+  const [mounted, setMounted] = useState(false)          // ✅ กัน SSR เด้ง
+  const [authorized, setAuthorized] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [data, setData] = useState<DisplayQueue[]>([])
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedDays, setSelectedDays] = useState<number>(7) // ✅ กำหนดค่า default
-
+  const [selectedDays, setSelectedDays] = useState<number>(7)
   const itemsPerPage = 50
   const router = useRouter()
 
+  // ---------- Mounted check ----------
   useEffect(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    setMounted(true)
+  }, [])
 
-    const blockEvent = (e: Event) => {
-      const target = e.target as HTMLElement;
-      const isAllowed =
-        target.tagName === 'INPUT' || target.tagName === 'BUTTON';
-      if (!isAllowed) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    document.addEventListener('mousedown', blockEvent, true);
-    document.addEventListener('mouseup', blockEvent, true);
-    document.addEventListener('selectstart', blockEvent, true);
-    document.addEventListener('contextmenu', blockEvent, true);
-
-    return () => {
-      document.removeEventListener('mousedown', blockEvent, true);
-      document.removeEventListener('mouseup', blockEvent, true);
-      document.removeEventListener('selectstart', blockEvent, true);
-      document.removeEventListener('contextmenu', blockEvent, true);
-    };
-  }, []);
-  
+  // ---------- Auth Check ----------
   useEffect(() => {
-    const isAdmin = sessionStorage.getItem('isAdmin')
-    if (isAdmin === 'true') {
-      setAuthorized(true)
-    } else {
+    if (!mounted) return
+    const role = sessionStorage.getItem('role') // 'admin' | 'user' | null
+    if (!role) {
       router.replace('/queue/informations/login')
+      return
     }
-  }, [router])
+    setAuthorized(true)
+    setIsAdmin(role === 'admin')
+  }, [mounted, router])
 
-  // ✅ ตั้งค่า startDate/endDate เริ่มต้น
+  // ---------- Init Date Range ----------
   useEffect(() => {
     const today = new Date()
     const start = new Date()
@@ -99,11 +69,12 @@ export default function QueueDashboard() {
     setEndDate(today.toISOString().split('T')[0])
   }, [])
 
-  // ✅ Fetch data เมื่อช่วงวันเปลี่ยน
   useEffect(() => {
     if (startDate && endDate) fetchQueueData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate])
 
+  // ---------- Fetch Data ----------
   const fetchQueueData = async () => {
     try {
       const res = await fetch('/api/dataqueue', {
@@ -111,22 +82,33 @@ export default function QueueDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ startDate, endDate }),
       })
+      const raw = await res.json()
 
-      const rawData = await res.json()
-      if (res.status !== 200) {
-        alert(`เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${rawData?.error || 'Unknown error'}`)
+      if (!res.ok) {
+        const msg = raw?.error ? String(raw.error) : 'Unknown error'
+        alert(`เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${msg}`)
+        return
+      }
+      if (!Array.isArray(raw)) {
+        alert('รูปแบบข้อมูลไม่ถูกต้อง (คาดว่าเป็นอาเรย์)')
         return
       }
 
-      const formatted: DisplayQueue[] = rawData.map((item: QueueRecord) => {
-        const hasReset = item.previousQueue !== undefined && item.previousQueue > 0
+      const rawData = raw as QueueRecord[]
+      const dailySum: Record<string, number> = {}
+      for (const item of rawData) {
         const displayDate = item.date.split('T')[0]
-        return {
-          date: displayDate,
-          totalQueues: hasReset ? item.previousQueue! : item.lastQueue ?? 0,
-          source: hasReset ? 'คิวก่อนรีเซ็ต' : 'คิวสุดท้าย',
-        }
-      })
+        const value = (item.previousQueue ?? 0) + (item.lastQueue ?? 0)
+        dailySum[displayDate] = (dailySum[displayDate] || 0) + value
+      }
+
+      const formatted: DisplayQueue[] = Object.entries(dailySum)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, totalQueues]) => ({
+          date,
+          totalQueues,
+          source: 'รวม (previousQueue + lastQueue)',
+        }))
 
       setData(formatted)
       setCurrentPage(1)
@@ -135,9 +117,9 @@ export default function QueueDashboard() {
     }
   }
 
+  // ---------- Pagination ----------
   const totalPages = Math.ceil(data.length / itemsPerPage)
   const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-
   const totalQueuesSum = data.reduce((sum, item) => sum + item.totalQueues, 0)
 
   const handleTimeOptionClick = (days: number) => {
@@ -149,10 +131,9 @@ export default function QueueDashboard() {
     setSelectedDays(days)
   }
 
-  // ✅ สร้าง chartData ตาม selectedDays
+  // ---------- Chart Data ----------
   const chartData = (() => {
     if (data.length === 0) return []
-
     const start = new Date(startDate)
     const end = new Date(endDate)
 
@@ -162,21 +143,17 @@ export default function QueueDashboard() {
         return date >= start && date <= end
       })
     }
-
     if (selectedDays === 30) {
       const byMonth: Record<string, number> = {}
       data.forEach((item) => {
         const d = new Date(item.date)
-        const m = d.getMonth() + 1
-        const key = m.toString().padStart(2, '0')
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
         byMonth[key] = (byMonth[key] || 0) + item.totalQueues
       })
-      return Object.entries(byMonth).map(([month, totalQueues]) => ({
-        date: `เดือน ${month}`,
-        totalQueues,
-      }))
+      return Object.entries(byMonth)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([ym, totalQueues]) => ({ date: ym, totalQueues }))
     }
-
     if (selectedDays === 365) {
       const byYear: Record<string, number> = {}
       data.forEach((item) => {
@@ -187,24 +164,28 @@ export default function QueueDashboard() {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([year, totalQueues]) => ({ date: year, totalQueues }))
     }
-
     if (selectedDays === 3650) {
       const byGroup: Record<string, number> = {}
       data.forEach((item) => {
         const y = new Date(item.date).getFullYear()
-        const bucket = `${Math.floor(y / 2) * 2}-${Math.floor(y / 2) * 2 + 1}`
+        const base = Math.floor(y / 2) * 2
+        const bucket = `${base}-${base + 1}`
         byGroup[bucket] = (byGroup[bucket] || 0) + item.totalQueues
       })
       return Object.entries(byGroup)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([range, totalQueues]) => ({ date: range, totalQueues }))
     }
-
     return data.slice(-50)
   })()
 
-  if (authorized === null) return <p style={{ padding: 20 }}>กำลังตรวจสอบสิทธิ์ผู้ใช้...</p>
-  if (!authorized) return null
+  // ---------- Render ----------
+  if (!mounted) {
+    return <p style={{ padding: 20 }}>กำลังโหลด...</p>
+  }
+  if (!authorized) {
+    return null
+  }
 
   return (
     <div className={styles.dashboardContainer}>
@@ -214,19 +195,21 @@ export default function QueueDashboard() {
           <span>Dashboard Queue</span>
         </h1>
         <div className={styles.buttonGroup}>
-          <button onClick={() => router.push('/queue/informations/admin')} className={styles.actionButton}>
-            <ArrowLeftCircle size={16} />
-            <span>กลับหน้า Admin</span>
-          </button>
+          {isAdmin && (
+            <button onClick={() => router.push('/queue/informations/admin')} className={styles.actionButton}>
+              <ArrowLeftCircle size={16} />
+              <span>กลับหน้า Admin</span>
+            </button>
+          )}
           <button
             onClick={() => {
-              sessionStorage.removeItem('isAdmin')
+              sessionStorage.clear()
               router.push('/queue/informations')
             }}
             className={styles.actionButton}
           >
             <LogOut size={16} />
-            <span>ไปหน้ารับคิว</span>
+            <span>ออกจากระบบ</span>
           </button>
         </div>
       </div>
@@ -307,7 +290,7 @@ export default function QueueDashboard() {
       {totalPages > 1 && (
         <div className={styles.paginationControls}>
           <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
             className={styles.paginationButton}
           >
@@ -315,7 +298,7 @@ export default function QueueDashboard() {
           </button>
           <span style={{ margin: '0 1rem' }}>หน้า {currentPage} / {totalPages}</span>
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
             className={styles.paginationButton}
           >

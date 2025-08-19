@@ -70,54 +70,6 @@
   margin-top: -0.5rem;
   margin-bottom: 1rem;
   text-align: center;
-  font-family: 'Sarabun', sans-serif;
-}
-
-.login-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-family: 'Sarabun', sans-serif;
-}
-
-.login-button:hover {
-  background-color: #0056b3;
-}
-
-.waitingMessage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 1.2rem;
-  margin-top: 1rem;
-  color: #888;
-}
-
-.spinIcon {
-  animation: spin 1.2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.pulseSpin {
-  animation: pulseSpin 1s infinite linear;
-}
-
-@keyframes pulseSpin {
-  0% { transform: rotate(0deg); opacity: 1; }
-  50% { transform: rotate(180deg); opacity: 0.6; }
-  100% { transform: rotate(360deg); opacity: 1; }
 }
 
 .button-group {
@@ -127,18 +79,36 @@
   margin-top: 1rem;
 }
 
-.back-button {
-  font-family: 'Sarabun',sans-serif;
-  padding: 0.8rem;
+/* ปุ่มหลัก (ใช้ได้ทั้ง login/back) */
+.main-button {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #f3f4f6;
-  color: #374151;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  font-family: 'Sarabun', sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+  border: none;
 }
 
-.back-button:hover {
+/* สไตล์เฉพาะ login */
+.main-button:not(.back) {
+  background-color: #007bff;
+  color: white;
+}
+
+.main-button:not(.back):hover {
+  background-color: #0056b3;
+}
+
+/* สไตล์เฉพาะ back */
+.main-button.back {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #ccc;
+}
+
+.main-button.back:hover {
   background: #e5e7eb;
 }

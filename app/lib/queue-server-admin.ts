@@ -111,6 +111,7 @@ export async function autoResetOnStartup(): Promise<boolean> {
       }
     }
   } catch {
+    // ไม่มีไฟล์ → วันใหม่หรือยังไม่เคยตั้งค่า -> รีได้เลย
     shouldReset = true
   }
 
@@ -125,27 +126,22 @@ export async function autoResetOnStartup(): Promise<boolean> {
     }
 
     await fs.writeFile(queueFile, JSON.stringify(resetData, null, 2), 'utf-8')
-
-    try {
-      await prisma.dataQueue.update({
-        where: { date: todayMidnightUTC },
-        data: {
-          lastQueue: 0,
-          previousQueue,
-          source: 'auto'
-        }
-      })
-    } catch {
-      await prisma.dataQueue.create({
-        data: {
-          date: todayMidnightUTC,
-          lastQueue: 0,
-          previousQueue,
-          source: 'auto',
-          location: null
-        }
-      })
-    }
+    await prisma.dataQueue.upsert({
+      where: { date: todayMidnightUTC },
+      create: {
+        date: todayMidnightUTC,
+        lastQueue: 0,
+        previousQueue,
+        source: 'auto',
+        location: null
+      },
+      update: {
+        lastQueue: 0,
+        previousQueue,
+        source: 'auto',
+        location: null
+      }
+    })
 
     console.log(`✅ [AUTO RESET] คิวถูกรีแล้ว: ${now.format('HH:mm')} queue=0 (เก่า=${previousQueue})`)
     return true
@@ -174,24 +170,21 @@ export async function updateQueueFromAdmin(newQueue: number): Promise<void> {
   await fs.writeFile(queueFile, JSON.stringify(data, null, 2), 'utf-8')
   console.log(`[ADMIN] อัปเดตคิวล่าสุดเป็น ${newQueue} @ ${now.format('HH:mm')} (${queueFile})`)
 
-  try {
-    await prisma.dataQueue.update({
-      where: { date: todayMidnightUTC },
-      data: {
-        lastQueue: newQueue
-      }
-    })
-  } catch {
-    await prisma.dataQueue.create({
-      data: {
-        date: todayMidnightUTC,
-        lastQueue: newQueue,
-        previousQueue: 0,
-        source: 'manual',
-        location: null
-      }
-    })
-  }
+  await prisma.dataQueue.upsert({
+    where: { date: todayMidnightUTC },
+    create: {
+      date: todayMidnightUTC,
+      lastQueue: newQueue,
+      previousQueue: 0,
+      source: 'manual',
+      location: null
+    },
+    update: {
+      lastQueue: newQueue,
+      source: 'manual',
+      location: null
+    }
+  })
 
   console.log(`[DB] ✅ บันทึกคิวล่าสุด ${newQueue} ลง MySQL สำเร็จ`)
 }

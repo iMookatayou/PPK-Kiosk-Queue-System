@@ -12,12 +12,10 @@ dayjs.extend(timezone)
 
 const TIMEZONE = 'Asia/Bangkok'
 
-// ✅ คืนค่า 'YYYY-MM-DD' ของวันนี้ใน timezone ที่กำหนด
 function getToday(): string {
   return dayjs().tz(TIMEZONE).format('YYYY-MM-DD')
 }
 
-// ✅ คืนค่า Date ที่เป็น 00:00:00 UTC ของวันใน timezone Bangkok
 function getTodayMidnightUTC(): Date {
   const now = dayjs().tz(TIMEZONE)
   return new Date(Date.UTC(now.year(), now.month(), now.date()))

@@ -545,19 +545,17 @@ const handlePrint = (queueNumber: number) => {
           title="silent-print"
         />
 
-        {/* โลโก้ */}
         <div className={styles.logoContainer}>
-          <img src="/images/logoppk2.png" alt="โลโก้" className={styles.logo} />
+          <img src="/images/logoppk3.png" alt="โลโก้" className={styles.logo} />
           <div className={styles.hospitalBar}>
             <h1 className={styles.hospitalName}>
-              โรงพยาบาลพระปกเกล้าจันทบุรี
-              <br />
-              <span className={styles.enName}>PHRAPOKKLAO HOSPITAL</span>
+              PHRAPOKKLAO HOSPITAL
+              <span className={styles.kioskName}>KIOSK QUEUE</span>
             </h1>
           </div>
         </div>
 
-        {/* ✅ พื้นที่ popup เว้นไว้ตลอด */}
+        {/* พื้นที่ popup เว้นไว้ตลอด */}
         <div className={styles.popupSpace}>
           {typeof cardMessage === 'string' && cardMessage.trim() ? (
             <motion.div
@@ -596,6 +594,7 @@ const handlePrint = (queueNumber: number) => {
                   background: 'transparent',
                   border: 'none',
                   boxShadow: 'none',
+                  filter:  'invert(72%) sepia(98%) saturate(3000%) hue-rotate(10deg) brightness(105%) contrast(105%)',
                 }}
               />
             </motion.div>
@@ -606,15 +605,7 @@ const handlePrint = (queueNumber: number) => {
         <div className={styles.clockAndCardWrapper}>
           {/* เวลา */}
           <div className={styles.clock}>
-            <Clock
-              style={{
-                marginRight: 8,
-                fontSize: '3rem',
-                width: '3rem',
-                height: '3rem',
-              }}
-            />
-            เวลาปัจจุบัน: {now}
+            {now}
           </div>
 
           {/* กล่องคิว */}
@@ -683,7 +674,7 @@ const handlePrint = (queueNumber: number) => {
         {menuOpen && (
           <div className={styles.sidebarMenu}>
             <button onClick={handleAdminClick} className={styles.menuItem}>
-              <Shield size={18} style={{ marginRight: 8 }} /> ADMIN
+              <Shield size={24} style={{ marginRight: 8 }} /> Kiosk System
             </button>
             {resetMessage && (
               <div className={styles.resetInfo}>{resetMessage}</div>

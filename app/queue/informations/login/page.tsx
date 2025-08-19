@@ -1,67 +1,64 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
-import { users } from '@/api/utils/mockuser'
+import { users } from '@/api/utils/mockuser' // ให้ตรงชื่อไฟล์จริง (case-sensitive)
 import styles from './Login.module.css'
-import { createHash } from 'crypto'
 
 export default function LoginPage() {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  // ป้องกันโฟกัสออโต้
   useEffect(() => {
     if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+      document.activeElement.blur()
     }
+  }, [])
 
-    const blockEvent = (e: Event) => {
-      const target = e.target as HTMLElement;
-      const isAllowed =
-        target.tagName === 'INPUT' || target.tagName === 'BUTTON';
-      if (!isAllowed) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    document.addEventListener('mousedown', blockEvent, true);
-    document.addEventListener('mouseup', blockEvent, true);
-    document.addEventListener('selectstart', blockEvent, true);
-    document.addEventListener('contextmenu', blockEvent, true);
-
-    return () => {
-      document.removeEventListener('mousedown', blockEvent, true);
-      document.removeEventListener('mouseup', blockEvent, true);
-      document.removeEventListener('selectstart', blockEvent, true);
-      document.removeEventListener('contextmenu', blockEvent, true);
-    };
-  }, []);
-  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
 
-    console.log('🔐 เริ่มทำการเข้าสู่ระบบ...')
+    if (!username.trim() || !password) {
+      setError('กรอกชื่อผู้ใช้และรหัสผ่าน')
+      return
+    }
 
-    const hashedPassword = hashPassword(password)
-    console.log('รหัสผ่าน (หลังแฮช):', hashedPassword)
+    setLoading(true)
+    try {
+      const hashedPassword = await sha256Hex(password)
 
-    const matchedUser = users.find(
-      (user) => user.username === 'admin' && user.password === hashedPassword
-    )
+      const matchedUser = users.find(
+        (u) =>
+          u.username.toLowerCase() === username.trim().toLowerCase() &&
+          u.password === hashedPassword
+      )
 
-    console.log('ผลลัพธ์การจับคู่ผู้ใช้:', matchedUser)
+      if (!matchedUser) {
+        setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
+        return
+      }
 
-    if (matchedUser) {
-      console.log('✅ เข้าสู่ระบบสำเร็จ: เป็นแอดมิน')
-      sessionStorage.setItem('isAdmin', 'true')
-      router.push('/queue/informations/admin')
-    } else {
-      console.log('❌ เข้าสู่ระบบไม่สำเร็จ: รหัสผ่านไม่ถูกต้อง')
-      setError('รหัสผ่านไม่ถูกต้อง')
+      // เก็บ session
+      sessionStorage.setItem('role', matchedUser.role)
+      sessionStorage.setItem('isAdmin', String(matchedUser.role === 'admin'))
+      sessionStorage.setItem('username', matchedUser.username)
+
+      // route ตาม role
+      if (matchedUser.role === 'admin') {
+        router.push('/queue/informations/admin')
+      } else {
+        router.push('/queue/informations/dashboard')
+      }
+    } catch {
+      setError('เกิดข้อผิดพลาดระหว่างล็อกอิน')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -72,8 +69,21 @@ export default function LoginPage() {
   return (
     <div className={styles['login-layout']}>
       <div className={styles['login-card']}>
-        <h2 className={styles['login-title']}>เข้าสู่ระบบผู้ดูแล</h2>
+        <h2 className={styles['login-title']}>เข้าสู่ระบบ</h2>
         <form onSubmit={handleLogin}>
+          {/* Username */}
+          <div className={styles['input-wrapper']}>
+            <span className={styles.icon}>@</span>
+            <input
+              type="text"
+              className={styles['password-input']}
+              placeholder="ชื่อผู้ใช้"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+
+          {/* Password */}
           <div className={styles['input-wrapper']}>
             <Lock className={styles.icon} size={20} />
             <input
@@ -84,16 +94,22 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+
           {error && <p className={styles['error-message']}>{error}</p>}
 
           <div className={styles['button-group']}>
-            <button type="submit" className={styles['login-button']}>
-              เข้าสู่ระบบ
+            <button
+              type="submit"
+              className={styles['main-button']}
+              disabled={loading}
+            >
+              {loading ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบ'}
             </button>
             <button
               type="button"
-              className={styles['back-button']}
+              className={styles['main-button'] + ' ' + styles['back']}
               onClick={handleBack}
+              disabled={loading}
             >
               ย้อนกลับ
             </button>
@@ -104,6 +120,10 @@ export default function LoginPage() {
   )
 }
 
-function hashPassword(password: string): string {
-  return createHash('sha256').update(password).digest('hex')
+/** hash ด้วย Web Crypto ให้ได้ sha256 แบบ hex */
+async function sha256Hex(text: string): Promise<string> {
+  const enc = new TextEncoder().encode(text)
+  const buf = await crypto.subtle.digest('SHA-256', enc)
+  const bytes = Array.from(new Uint8Array(buf))
+  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
 }

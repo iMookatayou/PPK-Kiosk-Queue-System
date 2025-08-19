@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
-// เปลี่ยนชื่อที่ import มาเป็นชื่ออื่น เพื่อไม่ชนกับ component หลัก
+// import DashboardPage แบบไม่ใช้ SSR
 const DashboardPage = dynamic(() => import('./DashboardPage'), { ssr: false })
 
 export default function QueueDashboardPageWrapper() {
@@ -12,11 +12,11 @@ export default function QueueDashboardPageWrapper() {
   const router = useRouter()
 
   useEffect(() => {
-    const isAdmin = sessionStorage.getItem('isAdmin')
-    if (isAdmin === 'true') {
+    const role = sessionStorage.getItem('role') // 'admin' | 'user' | null
+    if (role === 'admin' || role === 'user') {
       setAuthorized(true)
     } else {
-      router.replace('/queue/informations/login') // redirect ถ้าไม่ใช่ admin
+      router.replace('/queue/informations/login') // redirect ถ้าไม่มี role เลย
     }
   }, [router])
 

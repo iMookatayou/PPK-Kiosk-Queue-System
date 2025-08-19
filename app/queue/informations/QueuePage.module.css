@@ -1,3 +1,4 @@
+/* ---------------------- ฟอนต์ ---------------------- */
 @font-face {
   font-family: 'Sarabun';
   src: url('/fonts/sarabun/Sarabun-Regular.woff2') format('woff2'),
@@ -7,7 +8,6 @@
   font-style: normal;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Sarabun';
   src: url('/fonts/sarabun/Sarabun-Bold.woff2') format('woff2'),
@@ -16,6 +16,11 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+}
+
+.pageBackground,
+.pageBackground * {
+  font-family: 'Sarabun', sans-serif !important;
 }
 
 /* ---------------------- พื้นหลังหลัก ---------------------- */
@@ -33,16 +38,17 @@
 .header {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(145deg, #e0f2fe, #bfdbfe);
+  background: linear-gradient(145deg, #1f455e, #123866);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: 3.6rem 2rem;
   box-sizing: border-box;
+  position: relative;
 }
 
-/* โลโก้ */
+/* ---------------------- โลโก้ ---------------------- */
 .logoContainer {
   display: flex;
   flex-direction: column;
@@ -54,10 +60,6 @@
   height: auto;
   animation: bounce 2s infinite;
 }
-@keyframes bounce {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
 
 /* ---------------------- กล่องชื่อโรงพยาบาล ---------------------- */
 .hospitalBarWrapper {
@@ -66,28 +68,50 @@
   flex-direction: column;
   align-items: center;
 }
+
 .hospitalBar {
   width: 100%;
-  background: linear-gradient(to right, #e0f2fe, #dbeafe);
   padding: 2rem 1.4rem;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   border-radius: 1rem;
 }
+
+/* ใช้ขนาดเดิม + จัดให้อยู่บรรทัดเดียวอย่างสวยงาม */
 .hospitalName {
   margin: 0;
-  font-size: 3.2rem;
-  font-weight: bold;
-  color: #1e3a8a;
-  font-family: 'Sarabun', sans-serif;
+  font-size: 3.2rem;         /* ขนาดเดิม */
+  font-weight: 700;
+  color: #ffffff;
   line-height: 1.3;
+  display: inline-flex;       /* ให้ span ต่อท้ายในบรรทัดเดียว */
+  align-items: baseline;      /* จัดฐานตัวอักษรให้เสมอกัน */
+  gap: 0.6rem;                /* ระยะคำหน้า-หลัง */
+  flex-wrap: wrap;            /* ถ้าจอแคบค่อยตัดขึ้นบรรทัดใหม่อัตโนมัติ */
 }
-.enName {
-  display: block;
-  font-size: 3rem;
-  font-weight: bold;
-  color: #1e40af;
-  margin-top: 0.5rem;
+
+.kioskName{
+  display: inline;
+  font-size: 3rem;               /* ขนาดเดิมของคุณ */
+  font-weight: 800;              /* หนักขึ้นนิดให้ลายชัด */
+  letter-spacing: 1px;
+  margin: 0;
+  color: #fff;                   /* fallback ถ้าไม่รองรับ clip */
+
+  /* ลายแถบเฉียงสุภาพ เหมาะกับ kiosk บนพื้นน้ำเงิน */
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.95) 0 8px,
+      rgba(255,255,255,0.70) 8px 16px),
+    linear-gradient(180deg, #ffffff 0%, #eaf2ff 100%);
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* เส้นขอบบางๆ ช่วยให้อ่านชัดบนพื้นเข้ม */
+  -webkit-text-stroke: 1px rgba(0,0,0,0.22);
+  paint-order: stroke fill;
+  text-shadow: 0 1px 0 rgba(0,0,0,.18);
 }
 
 /* ---------------------- พื้นที่เผื่อ popup ---------------------- */
@@ -97,8 +121,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin: 1rem 0;
 }
 .popupBox {
   background-color: #2ecc71;
@@ -109,23 +132,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: none;
-  white-space: nowrap;
-  margin: 0 auto;
   font-size: 1.6rem;
-  font-family: 'Sarabun', sans-serif;
 }
 .popupBox svg {
   width: 24px;
   height: 24px;
-}
-.popupBox span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-  flex-grow: 1;
-  min-width: 0;
 }
 .popupBoxTransparent {
   background-color: transparent !important;
@@ -145,7 +156,7 @@
   align-items: center;
   justify-content: center;
   margin: 1.6rem 0 1rem 0;
-  color: #1f2937;
+  color: #ffffff;
   font-size: 2.4rem;
 }
 .clock svg {
@@ -176,11 +187,8 @@
   font-size: 2.4rem;
   color: #1f2937;
   font-weight: 700;
-  font-family: 'Sarabun', sans-serif;
   margin-bottom: 1.6rem;
 }
-
-/* กล่องตัวเลข */
 .queueSlotWrapper {
   position: relative;
   width: 100%;
@@ -190,14 +198,10 @@
   align-items: center;
   margin-bottom: 3rem;
   padding: 1rem;
-  box-sizing: border-box;
   overflow: hidden;
 }
-
-/* ตัวเลขคิว */
 .queueNumber {
   font-size: 15rem;
-  font-family: 'Sarabun', sans-serif;
   color: #1e40af;
   letter-spacing: 6px;
   line-height: 1;
@@ -208,12 +212,11 @@
 
 /* ---------------------- ปุ่มรับคิว ---------------------- */
 .button {
-  width: 100%;              /* กว้างเต็ม */
-  max-width: none;
-  padding: 3rem 2rem;       /* เพิ่มขนาดปุ่ม */
-  font-size: 3rem;          /* ตัวอักษรใหญ่ขึ้น */
+  width: 100%;
+  padding: 3rem 2rem;
+  font-size: 3rem;
   font-weight: bold;
-  border-radius: 2.4rem;    /* มุมโค้งใหญ่ขึ้น */
+  border-radius: 2.4rem;
   border: none;
   display: flex;
   justify-content: center;
@@ -237,50 +240,40 @@
 
 /* ---------------------- Footer ของการ์ด ---------------------- */
 .cardFooter {
-  height: 120px;                /* เพิ่มความสูง */
+  height: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
   width: 100%;
 }
 .cardFooter .button,
 .cardFooter .waitingMessage {
   flex: 1;
-  width: 100%;
   height: 100%;
   margin: 0;
   border-radius: 1.8rem;
-  font-size: 2.4em;
+  font-size: 2.4rem;
   font-weight: 700;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-sizing: border-box;
 }
 .cardFooter .buttonActive {
   background: linear-gradient(to right, red, red);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.4);
-}
-.cardFooter .buttonActive:hover {
-  transform: scale(1.03);
 }
 .cardFooter .buttonDisabled {
   background-color: #e5e7eb;
   color: #9ca3af;
-  cursor: not-allowed;
 }
 
+/* ---------------------- สถานะการ์ด ---------------------- */
 .cardInserted {
-  background-color: red !important;   /* เสียบแล้วสีแดง */
+  background-color: red !important;
   color: white !important;
 }
-
 .cardNotInserted {
-  background-color: rgb(172, 172, 172) !important;  /* ยังไม่เสียบสีเทา */
+  background-color: #acacac !important;
   color: white !important;
 }
 
@@ -290,30 +283,19 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
-  font-size: 2.6rem;        /* ขยายตัวอักษร */
+  font-size: 2.6rem;
   font-weight: 600;
   background: #ffe5e5;
-  padding: 2rem 3rem;       /* ขยาย padding */
+  padding: 2rem 3rem;
   border-radius: 1.8rem;
   color: #b91c1c;
-  box-sizing: border-box;
 }
-
-/* ตอนระบบปิดทำการ */
 .waitingMessageClosed {
   font-size: 2.4rem !important;
   line-height: 1.3 !important;
   text-align: center;
   padding: 1.6rem 2rem;
   border-radius: 1.6rem;
-}
-.waitingMessageClosed span {
-  font-size: inherit;
-  line-height: 1.4;
-}
-.waitingMessageClosed strong {
-  font-weight: 700;
-  font-size: inherit;
 }
 .waitingMessageClosed svg {
   width: 32px;
@@ -345,7 +327,7 @@
   border: none;
   cursor: pointer;
   padding: 4px;
-  color: #333;
+  color: #fff;
 }
 .sidebarMenu {
   position: absolute;
@@ -369,19 +351,27 @@
   padding: 6px 12px;
 }
 
-.pageBackground,
-.pageBackground * {
-  font-family: 'Sarabun', sans-serif !important;
+
+
+/* ---------------------- Responsive ---------------------- */
+@media (max-width: 1024px) {
+  .logo { width: 140px; }
+  .hospitalName { font-size: 2.6rem; }
+  .kioskName { font-size: 2.4rem; }
+  .queueNumber { font-size: 12rem; }
+}
+@media (max-width: 768px) {
+  .logo { width: 120px; }
+  .hospitalName { font-size: 2.2rem; }
+  .kioskName { font-size: 2rem; }
+  .queueNumber { font-size: 9rem; }
+  .button { font-size: 2.2rem; padding: 2rem; }
+}
+@media (max-width: 480px) {
+  .logo { width: 100px; }
+  .hospitalName { font-size: 1.8rem; }
+  .kioskName { font-size: 1.6rem; }
+  .queueNumber { font-size: 7rem; }
+  .button { font-size: 1.8rem; padding: 1.6rem; }
 }
 
-.card,
-.queueLabel,
-.queueNumber,
-.waitingMessage,
-.button,
-.popupBox,
-.hospitalName,
-.enName,
-.clock {
-  font-family: 'Sarabun', sans-serif !important;
-}
