@@ -1,13 +1,21 @@
+version: '3.8'
+
 services:
   web:
     build:
       context: .
+      args:
+        # ส่งค่า DATABASE_URL ให้ stage build (ตอน prisma generate)
+        DATABASE_URL: ${DATABASE_URL}
     container_name: queue-app
     ports:
       - "4000:4000"
     env_file:
-      - .env
+      - .env     # โหลด DATABASE_URL และอื่น ๆ จากไฟล์นี้
     environment:
       TZ: Asia/Bangkok
-    volumes:
-      - ./data:/app/data   # <<<< ตรงนี้ทำให้ไฟล์ settings.json โผล่ใน VS Code
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    # เอา volumes ./data:/app/data ออก ถ้าไม่จำเป็น
+    # volumes:
+    #   - ./data:/app/data
